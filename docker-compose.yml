@@ -1,14 +1,10 @@
-version: "3.8"
-
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: parcel-app
+    build: .
+    container_name: raot-interface2
     ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
+      - "${WEB_PORT:-8081}:80"
+    env_file:
+      - .env
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -1,0 +1,33 @@
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Logs & temp
+*.log
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE / editor
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# PHP
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Optional: Composer (เปิดใช้ถ้าต้องการไม่ commit vendor)
+# /vendor/
+configs/*

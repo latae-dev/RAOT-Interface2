@@ -3,14 +3,24 @@ require_once 'database-wrapper.php';
 
 class Database
 {
+    // private $db_configs = [
+    //     'raot_db_qas' => [
+    //         'host' => '10.99.20.89',
+    //         'db_name' => 'raot_db_qas',
+    //         'username' => 'postgres',
+    //         'password' => 'Raot@1234'
+    //     ],
+    // ];
+
     private $db_configs = [
         'raot_db_qas' => [
-            'host' => '10.99.20.89',
-            'db_name' => 'raot_db_qas',
+            'host' => '172.0.0.1',
+            'db_name' => 'postgres',
             'username' => 'postgres',
-            'password' => 'Raot@1234'
+            'password' => 'password'
         ],
     ];
+
 
     private $conn;
 
@@ -25,6 +35,18 @@ class Database
         }
 
         $config = $this->db_configs[$db_key];
+
+        $envOverrides = [
+            'host' => getenv('DB_HOST'),
+            'db_name' => getenv('DB_NAME'),
+            'username' => getenv('DB_USER') ?: getenv('DB_USERNAME'),
+            'password' => getenv('DB_PASSWORD'),
+        ];
+        foreach ($envOverrides as $key => $value) {
+            if ($value !== false && $value !== '') {
+                $config[$key] = $value;
+            }
+        }
 
         try {
             // เช็คว่ามี pg_connect หรือไม่

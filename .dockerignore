@@ -1,0 +1,9 @@
+.git
+.gitignore
+**/.git
+vendor
+**/node_modules
+.idea
+.vscode
+*.md
+terminals
