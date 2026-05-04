@@ -1,39 +1,67 @@
 import { getQuarter } from "./quarter.js";
 
 let quarterlist = {};
-let quarter = {};
+/** @type {Array<{id:any,name?:string,month_start:number,month_end:number,day_start:number,day_end:number}>} */
+let quarter = [];
 
 let userData;
-let userObject
+let userObject;
+
+function defaultQuarterRanges() {
+    return [
+        { id: 1, month_start: 10, month_end: 12, day_start: 1, day_end: 31 },
+        { id: 2, month_start: 1, month_end: 3, day_start: 1, day_end: 31 },
+        { id: 3, month_start: 4, month_end: 6, day_start: 1, day_end: 30 },
+        { id: 4, month_start: 7, month_end: 9, day_start: 1, day_end: 30 },
+    ];
+}
+
+let quarterReadyPromise = null;
+
+async function ensureQuartersLoaded() {
+    if (Array.isArray(quarter) && quarter.length >= 4 && quarter[0]?.month_start != null) {
+        return;
+    }
+    if (!quarterReadyPromise) {
+        quarterReadyPromise = (async () => {
+            try {
+                quarterlist = await getQuarter();
+                const raw = quarterlist?.data;
+                if (Array.isArray(raw) && raw.length >= 4) {
+                    quarter = raw.map((qarter) => ({
+                        id: qarter.quarter_code,
+                        name: qarter.quarter_name,
+                        month_start: Number(qarter.quarter_month_start),
+                        month_end: Number(qarter.quarter_month_end),
+                        day_start: Number(qarter.quarter_date_start),
+                        day_end: Number(qarter.quarter_date_end),
+                    }));
+                } else {
+                    quarter = defaultQuarterRanges();
+                }
+            } catch (e) {
+                console.warn("getQuarter ไม่สำเร็จ ใช้ช่วงไตรมาสเริ่มต้น", e);
+                quarter = defaultQuarterRanges();
+            }
+        })();
+    }
+    await quarterReadyPromise;
+}
 
 export async function beginFetch() {
-
-    quarterlist = await getQuarter(); // โหลดพารามิเตอร์
-    quarter = quarterlist.data.map(qarter => ({
-        id: qarter.quarter_code,
-        name: qarter.quarter_name,
-        month_start: qarter.quarter_month_start,
-        month_end: qarter.quarter_month_end,
-        day_start: qarter.quarter_date_start,
-        day_end: qarter.quarter_date_end,
-    }))
-    // console.log('quarter',quarter);
-
     try {
-        // ตรวจสอบว่า sessionStorage มีค่าผู้ใช้หรือไม่
+        await ensureQuartersLoaded();
         userData = sessionStorage.getItem("raot_user_session");
         if (userData) {
             try {
-                userObject = JSON.parse(userData); // แปลง string -> Object
+                userObject = JSON.parse(userData);
             } catch (error) {
                 console.error("Error parsing user session data:", error);
                 window.location.href = "login.php";
+                return;
             }
         }
-
-        // เรียก fetchData() เพื่อโหลดข้อมูลตาราง
-        fetchData(1);
-
+        await fetchData(1);
     } catch (error) {
         console.error("❌ เกิดข้อผิดพลาด:", error);
         throw error;
@@ -41,30 +69,34 @@ export async function beginFetch() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    beginFetch(); // เรียกฟังก์ชันหลัง DOM โหลดเสร็จ
+    const searchBtn = document.getElementById("searchBtn");
+    if (searchBtn) {
+        searchBtn.addEventListener("click", function () {
+            fetchData(1);
+        });
+    }
+    beginFetch();
 });
 
-async function getAll(limit = 10, offset = 0, plan_number = '', start_date = '', end_date = '', status_plan = '') {
+async function getAll(limit = 10, offset = 0, plan_number = "", start_date = "", end_date = "", status_plan = "") {
     try {
         window.showLoading();
-        /*  plan_number = plan_number === '' ? null : plan_number;
-         start_date = start_date === '' ? null : start_date;
-         end_date = end_date === '' ? null : end_date;
-         status_plan = status_plan === '' ? null : status_plan; */
-
-        const response = await fetch(`../controllers/parcels/plan_controller.php?action=plan_search_list&doc_type=master&
+        const response = await fetch(
+            `../controllers/parcels/plan_controller.php?action=plan_search_list&doc_type=master&
             limit=${limit}&
             offset=${offset}&
             plan_number=${plan_number}&
             start_date=${start_date}&
             end_date=${end_date}&
             status_plan=${status_plan}
-            `, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
+            `,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
             }
-        });
+        );
 
         if (!response.ok) {
             window.hideLoading();
@@ -82,19 +114,21 @@ async function getAll(limit = 10, offset = 0, plan_number = '', start_date = '',
 
 async function fetchData(page = 1) {
     try {
+        await ensureQuartersLoaded();
+
         const limit = 10;
         const offset = (page - 1) * limit;
 
-        let plan_number = document.querySelector("[name='plan_number']")?.value || '';
-        let start_date = document.querySelector("[name='start_date']")?.value || '';
-        let end_date = document.querySelector("[name='end_date']")?.value || '';
-        let status_plan = document.querySelector("[name='status_plan']")?.value || '';
+        let plan_number = document.querySelector("[name='plan_number']")?.value || "";
+        let start_date = document.querySelector("[name='start_date']")?.value || "";
+        let end_date = document.querySelector("[name='end_date']")?.value || "";
+        let status_plan = document.querySelector("[name='status_plan']")?.value || "";
 
         const data = await getAll(limit, offset, plan_number, start_date, end_date, status_plan);
 
         const { total_pages: totalPages, current_page: currentPage } = data.pagination;
-        const tableBody = document.getElementById('data-table');
-        tableBody.innerHTML = '';
+        const tableBody = document.getElementById("data-table");
+        tableBody.innerHTML = "";
 
         if (!data.data.length) {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center">ไม่มีข้อมูล</td></tr>';
@@ -102,74 +136,54 @@ async function fetchData(page = 1) {
         }
 
         data.data.forEach((item, index) => {
-            // if (
-            //     userObject.user_code === item.user_requ  || 
-            //     (userObject.branch_id === item.branch_id && userObject.approve_branch === 'active')|| // ถ้าเป็นสาขาที่มีสิทธิ์อนุมัติ
-            //     (userObject.province_id === item.province_id && userObject.approve_province === 'active' && item.status_branch === 'approve') || // ถ้าเป็นจังหวัดที่มีสิทธิ์อนุมัติ
-            //     (userObject.area_id === item.area_id && userObject.approve_airea === 'active' && item.status_branch === 'approve' && item.status_province === 'approve') || // ถ้าเป็นพื้นที่ที่มีสิทธิ์อนุมัติ
-            //     (userObject.head_office_id === item.head_office_id && userObject.approve_head_office === 'active' && item.status_branch === 'approve' && item.status_province === 'approve' && item.status_area === 'approve') // ถ้าเป็นสำนักงานที่มีสิทธิ์อนุมัติ
-            // ) {
-                // 🎯 กำหนดปุ่ม Quarter (1-4)
-                const createdMonth = new Date(item.created_at).getMonth() + 1;
-                const reqDate = new Date().getDate();
+            const createdMonth = new Date(item.created_at).getMonth() + 1;
+            const reqDate = new Date().getDate();
 
-                let currentQuarter = 0;
-                // if (createdMonth >= 10 && createdMonth <= 12) {
-                //     currentQuarter = 1; // ต.ค. - ธ.ค.
-                // } else if (createdMonth >= 1 && createdMonth <= 3) {
-                //     currentQuarter = 2; // ม.ค. - มี.ค.
-                // } else if (createdMonth >= 4 && createdMonth <= 6) {
-                //     currentQuarter = 3; // เม.ย. - มิ.ย.
-                // } else if (createdMonth >= 7 && createdMonth <= 9) {
-                //     currentQuarter = 4; // ก.ค. - ก.ย.
-                // }
-                if (createdMonth >= quarter[0].month_start && createdMonth <= quarter[0].month_end) {
-                    currentQuarter = 1; // ต.ค. - ธ.ค.
-                } else if (createdMonth >= quarter[1].month_start && createdMonth <= quarter[1].month_end) {
-                    currentQuarter = 2; // ม.ค. - มี.ค.
-                } else if (createdMonth >= quarter[2].month_start && createdMonth <= quarter[2].month_end) {
-                    currentQuarter = 3; // เม.ย. - มิ.ย.
-                } else if (createdMonth >= quarter[3].month_start && createdMonth <= quarter[3].month_end) {
-                    currentQuarter = 4; // ก.ค. - ก.ย.
-                }
-                const quarterButtons = item.status_head_office === "approve"
+            let currentQuarter = 0;
+            const q = quarter;
+            if (q[0] && createdMonth >= q[0].month_start && createdMonth <= q[0].month_end) {
+                currentQuarter = 1;
+            } else if (q[1] && createdMonth >= q[1].month_start && createdMonth <= q[1].month_end) {
+                currentQuarter = 2;
+            } else if (q[2] && createdMonth >= q[2].month_start && createdMonth <= q[2].month_end) {
+                currentQuarter = 3;
+            } else if (q[3] && createdMonth >= q[3].month_start && createdMonth <= q[3].month_end) {
+                currentQuarter = 4;
+            }
+
+            const quarterButtons =
+                item.status_head_office === "approve"
                     ? Array.from({ length: 4 }, (_, i) => {
-                        const q = i + 1;
-                        const isCurrent = currentQuarter === q;
-                        return `<a href="javascript:void(0);" onclick="checkPeriod(${q} , ${reqDate} , '${(isCurrent ? `parcel-doc-form.php?id=${item.id}&quarter=${q}` : '#')}');" 
-                                    class="btn btn-icon btn-sm ${isCurrent ? 'btn-info' : 'btn-light'} rounded-pill">
-                                    ${q}
+                          const qi = i + 1;
+                          const isCurrent = currentQuarter === qi;
+                          return `<a href="javascript:void(0);" onclick="checkPeriod(${qi} , ${reqDate} , '${isCurrent ? `parcel-doc-form.php?id=${item.id}&quarter=${qi}` : "#"}');" 
+                                    class="btn btn-icon btn-sm ${isCurrent ? "btn-info" : "btn-light"} rounded-pill">
+                                    ${qi}
                                 </a>`;
-                    }).join('')
+                      }).join("")
                     : '<span class="text-muted">สถานะต้องเป็นอนุมัติ</span>';
 
-                            // 🎯 แปลงสถานะ `status_plan` เป็นภาษไทย
-                            const statusLabels = {
-                                pending: `<span class="badge rounded-pill bg-warning">รออนุมัติ</span>`,
-                                approve: `<span class="badge rounded-pill bg-success">อนุมัติ</span>`,
-                                reject: `<span class="badge rounded-pill bg-danger">ไม่อนุมัติ</span>`,
-                                edit: `<span class="badge rounded-pill bg-info">ส่งกลับแก้ไข</span>`,
-                                delete: `<span class="badge rounded-pill bg-dark">ลบแล้ว</span>`
-                            };
-                            
-                            // ตรวจสอบลำดับสถานะ
-                            let statusToUse = item.status_head_office;
-                            
-                            if (item.status_branch === 'reject') {
-                                statusToUse = item.status_branch;
-                            } else if (item.status_province === 'reject') {
-                                statusToUse = item.status_province;
-                            } else if (item.status_area === 'reject') {
-                                statusToUse = item.status_area;
-                            }
-                            
-                            // แสดง label ภาษาไทย
-                            const status_thai = statusLabels[statusToUse] || '-';
+            const statusLabels = {
+                pending: `<span class="badge rounded-pill bg-warning">รออนุมัติ</span>`,
+                approve: `<span class="badge rounded-pill bg-success">อนุมัติ</span>`,
+                reject: `<span class="badge rounded-pill bg-danger">ไม่อนุมัติ</span>`,
+                edit: `<span class="badge rounded-pill bg-info">ส่งกลับแก้ไข</span>`,
+                delete: `<span class="badge rounded-pill bg-dark">ลบแล้ว</span>`,
+            };
 
-                            // 🎯 สร้างแถวข้อมูลในตาราง
-                            const row = document.createElement('tr');
-                            row.classList.add('crm-contact', 'text-center');
-                            row.innerHTML = `
+            let statusToUse = item.status_head_office;
+            if (item.status_branch === "reject") {
+                statusToUse = item.status_branch;
+            } else if (item.status_province === "reject") {
+                statusToUse = item.status_province;
+            } else if (item.status_area === "reject") {
+                statusToUse = item.status_area;
+            }
+            const status_thai = statusLabels[statusToUse] || "-";
+
+            const row = document.createElement("tr");
+            row.classList.add("crm-contact", "text-center");
+            row.innerHTML = `
                         <td>${index + 1 + offset}</td>
                         <td>${convertToBuddhistEra(item.created_at)}</td>
                         <td>${item.plan_number}</td>
@@ -179,96 +193,124 @@ async function fetchData(page = 1) {
                         <td>
                             <div class="hstack gap-2 fs-15">
                                 <a href="parcel-withdrawal-list-detail.php?id=${item.id}" class="btn btn-icon btn-sm btn-success-transparent rounded-pill"><i class="fe fe-eye"></i></a>
-                                ${item.status_plan === 'pending' && item.user_requ === userObject.user_code ? `
+                                ${item.status_plan === "pending" && item.user_requ === (userObject?.user_code ?? null) ? `
                                     <a href="parcel-withdrawal-list-edit.php?id=${item.id}" class="btn btn-icon btn-sm btn-info-transparent rounded-pill"><i class="ri-edit-line"></i></a>
                                     <a href="#" class="btn btn-icon btn-sm btn-danger-transparent rounded-pill delete-btn" data-id="${item.id}"><i class="ri-delete-bin-line"></i></a>
-                                ` : ''}
+                                ` : ""}
                             </div>
                         </td>
                     `;
-                tableBody.appendChild(row);
-                const deleteBtn = row.querySelector('.delete-btn');
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        updateStatus('delete', item.id);
-                    });
-                }
-            // }
-
+            tableBody.appendChild(row);
+            const deleteBtn = row.querySelector(".delete-btn");
+            if (deleteBtn) {
+                deleteBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    confirmAndDelete(item.id);
+                });
+            }
         });
 
-        // 🎯 อัปเดตข้อความแสดงจำนวนข้อมูล
-        document.getElementById('showing-count').innerHTML = `กำลังแสดง ${data.data.length} รายการ <i class="bi bi-arrow-right ms-2 fw-semibold"></i>`;
-
-        // 🎯 อัปเดต Pagination
+        document.getElementById("showing-count").innerHTML = `กำลังแสดง ${data.data.length} รายการ <i class="bi bi-arrow-right ms-2 fw-semibold"></i>`;
         updatePagination(totalPages, currentPage);
     } catch (error) {
         console.error("❌ Error:", error);
     }
 }
 
+async function confirmAndDelete(id) {
+    const ok = await Swal.fire({
+        title: "ยืนยันการลบ",
+        text: "ต้องการลบแผนการเบิกนี้หรือไม่?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "ลบ",
+        cancelButtonText: "ยกเลิก",
+    });
+    if (!ok.isConfirmed) {
+        return;
+    }
+    await updateStatus("delete", id);
+}
+
 async function updateStatus(status_plan, id) {
+    const userCode = userObject?.user_code ?? "";
+    if (!userCode) {
+        Swal.fire({ title: "กรุณาเข้าสู่ระบบ", text: "ไม่พบข้อมูลผู้ใช้ใน session", icon: "warning" });
+        return;
+    }
     const data_sent = {
         status_plan: status_plan,
-        user_branch: userObject.user_code,
-        status_branch: status_plan
-    }
-    console.log(data_sent); // แสดงค่าใน Console เพื่อตรวจสอบ
+        user_requ: userCode,
+        status_branch: status_plan,
+        date_requ: "",
+    };
     try {
         window.showLoading();
         const response = await fetch(`../controllers/parcels/plan_controller.php?action=update_status&id=${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data_sent)
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify(data_sent),
         });
-
-        const result = await response.json();
-        console.log(result);
         window.hideLoading();
+
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseErr) {
+            Swal.fire({
+                title: "เกิดข้อผิดพลาด",
+                text: "ไม่สามารถอ่านคำตอบจากเซิร์ฟเวอร์ได้",
+                icon: "error",
+            });
+            return;
+        }
+
+        if (!response.ok || result.status !== "success") {
+            const msg = result.message || result.status || `HTTP ${response.status}`;
+            Swal.fire({ title: "ดำเนินการไม่สำเร็จ", text: String(msg), icon: "error" });
+            return;
+        }
 
         Swal.fire({
             title: "ดำเนินการสำเร็จ",
-            text: "ดำเนินการลบเอกสารสำเร็จ",
-            icon: "success"
+            text: status_plan === "delete" ? "ลบรายการแล้ว" : "บันทึกสำเร็จ",
+            icon: "success",
         }).then(() => {
             window.location.reload();
         });
     } catch (error) {
         window.hideLoading();
-        console.error('เกิดข้อผิดพลาด:', error);
+        console.error("เกิดข้อผิดพลาด:", error);
         Swal.fire({
             title: "เกิดข้อผิดพลาด",
             text: "รายการข้อผิดพลาด: " + error.message,
-            icon: "warning"
+            icon: "warning",
         });
     }
 }
 
 function updatePagination(totalPages, currentPage) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = '';
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
 
-    // ปุ่มก่อนหน้า
     if (currentPage > 1) {
         pagination.innerHTML += `<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="fetchData(${currentPage - 1})">ก่อนหน้า</a></li>`;
     } else {
         pagination.innerHTML += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0);">ก่อนหน้า</a></li>`;
     }
 
-    // ปุ่มเลขหน้า (แสดงเฉพาะ 5 หน้าใกล้กับหน้าปัจจุบัน)
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
 
     for (let i = startPage; i <= endPage; i++) {
         pagination.innerHTML += `
-            <li class="page-item ${i === currentPage ? 'active' : ''}">
+            <li class="page-item ${i === currentPage ? "active" : ""}">
                 <a class="page-link" href="javascript:void(0);" onclick="fetchData(${i})">${i}</a>
             </li>
         `;
     }
 
-    // ปุ่มถัดไป
     if (currentPage < totalPages) {
         pagination.innerHTML += `<li class="page-item"><a class="page-link" href="javascript:void(0);" onclick="fetchData(${currentPage + 1})">ถัดไป</a></li>`;
     } else {
@@ -276,43 +318,31 @@ function updatePagination(totalPages, currentPage) {
     }
 }
 
-function checkPeriod(quart,date,href) {
-    
-    const check_quarter = quarter.find(qua => qua.id == quart);
-
-    if(href != '#'){
-        if(date >= check_quarter.day_start && date <= check_quarter.day_end){
+function checkPeriod(quart, date, href) {
+    const check_quarter = quarter.find((qua) => qua.id == quart);
+    if (!check_quarter) {
+        Swal.fire({ text: "ไม่พบข้อมูลไตรมาส", icon: "warning" });
+        return;
+    }
+    if (href != "#") {
+        if (date >= check_quarter.day_start && date <= check_quarter.day_end) {
             window.location = href;
-        }else{
+        } else {
             Swal.fire({
                 text: "ไม่สามารถเบิกได้เนื่องจากเกินเวลาที่กำหนด !!!",
-                icon: "warning"
+                icon: "warning",
             });
         }
     }
 }
 
-
-/* แปลงวันที่ */
 function convertToBuddhistEra(dateString) {
     const date = new Date(dateString);
-
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // เดือนเริ่มที่ 0 จึงต้อง +1
-    const year = date.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
-
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear() + 543;
     return `${day}-${month}-${year}`;
 }
 
-// โหลดข้อมูลครั้งแรก
-document.addEventListener("DOMContentLoaded", function () {
-    fetchData(1);
-});
-// เพิ่ม Event ให้ปุ่มกด
-document.getElementById('searchBtn').addEventListener('click', function () {
-    fetchData(1); // เรียก API และดึงข้อมูลใหม่
-});
-
 document.fetchData = fetchData;
 document.checkPeriod = checkPeriod;
-
