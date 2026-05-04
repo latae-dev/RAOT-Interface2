@@ -199,9 +199,6 @@ class AuthenController
 
             $_SESSION['user_data'] = $res;
 
-            // ป้องกัน Session Fixation
-            session_regenerate_id(true);
-
             // Set session variables
             $_SESSION['is_authenticated'] = true;
             $_SESSION['user_id'] = $result['id'] ?? null;

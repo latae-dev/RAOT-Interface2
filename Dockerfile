@@ -21,5 +21,8 @@ RUN if [ -f composer.lock ]; then \
 
 COPY . /var/www/html
 
+# Session ต้องเริ่มก่อนหน้าเพจ output HTML — ป้องกัน headers already sent
+RUN echo 'auto_prepend_file = /var/www/html/configs/session_bootstrap.php' > /usr/local/etc/php/conf.d/raot-session.ini
+
 EXPOSE 80
 CMD ["apache2-foreground"]

@@ -1,5 +1,5 @@
-<!-- This code generates the base URL for the website by combining the protocol, domain name, and directory path -->
 <?php
+require_once __DIR__ . '/../configs/authMiddleware.php';
 $rootFolder = basename($_SERVER['DOCUMENT_ROOT']);
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . str_replace('/pages', '', dirname($_SERVER['SCRIPT_NAME']));
 ?>

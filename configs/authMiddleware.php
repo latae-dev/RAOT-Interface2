@@ -4,31 +4,7 @@
  * ใช้ร่วมกันทั้งระบบ - ไม่มี authMiddleware_ib.php แยกแล้ว
  */
 
-// เริ่มต้น Session (ตรวจสอบว่ายังไม่เริ่มต้น)
-if (session_status() === PHP_SESSION_NONE) {
-    // Set session configuration
-    ini_set('session.cookie_path', '/');
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.use_strict_mode', '1');
-    ini_set('session.cookie_lifetime', '86400'); // 24 hours
-    ini_set('session.gc_maxlifetime', '86400'); // 24 hours
-    ini_set('session.cookie_samesite', 'Lax'); // Prevent CSRF but allow navigation
-
-    session_start();
-
-    // Track session ID changes
-    // $currentSessionId = session_id();
-    // if (isset($_SESSION['_session_id']) && $_SESSION['_session_id'] !== $currentSessionId) {
-    //     error_log('🔄 Session ID changed! Old: ' . $_SESSION['_session_id'] . ' -> New: ' . $currentSessionId);
-    //     error_log('Session data before change: ' . print_r($_SESSION, true));
-    // }
-    // $_SESSION['_session_id'] = $currentSessionId;
-
-    // // Log session info for debugging
-    // if (empty($_SESSION['user_id'])) {
-    //     error_log('⚠️ Session started but no user_id. Session ID: ' . session_id());
-    // }
-}
+require_once __DIR__ . '/session_bootstrap.php';
 
 /**
  * ตรวจสอบการ authentication แบบมาตรฐาน

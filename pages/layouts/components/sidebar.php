@@ -33,22 +33,8 @@ if (session_id() === '' && !headers_sent()) {
 
 // ดึงเมนูสำหรับ user ปัจจุบัน
 try {
-    // Debug: ตรวจสอบ position IDs จาก session
     $positionIds = getUserPositionIds();
-    
-    // Debug: Log session data
-    $sessionDebug = [
-        'session_id' => session_id(),
-        'has_user_data' => isset($_SESSION['user_data']),
-        'user_data_keys' => isset($_SESSION['user_data']) ? array_keys($_SESSION['user_data']) : [],
-        'position_ids' => $positionIds,
-        'position_id_from_user_data' => $_SESSION['user_data']['position_id'] ?? null,
-        'position_list_from_user_data' => $_SESSION['user_data']['position_list'] ?? null,
-        'position_id_from_root' => $_SESSION['position_id'] ?? null
-    ];
-    // error_log("Sidebar Debug: " . json_encode($sessionDebug, JSON_UNESCAPED_UNICODE));
-    
-    // ถ้าไม่มี position IDs ใน session ให้แสดงเมนูทั้งหมด (แต่ log warning)
+
     if (empty($positionIds)) {
         // error_log("Sidebar Warning: No position IDs found in session. Showing all menus. Please check session setup.");
         // แสดงเมนูทั้งหมดถ้าไม่มี position IDs (ใช้ readMenuTree แทน getMenuForUser([], true))
@@ -180,77 +166,14 @@ function countMenuItems($menu) {
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Script สำหรับจัดการ dynamic menu permissions (ถ้าต้องการ)
-        // เนื่องจากตอนนี้ permissions จัดการที่ server-side แล้ว
-        // แต่ถ้ามี menu ที่ต้องการซ่อนด้วย JavaScript ก็สามารถทำได้ที่นี่
-        
-        // Debug: Log position_id information
-        const positionIds = <?php echo json_encode($positionIds ?? []); ?>;
-        const sessionDebug = <?php echo json_encode($sessionDebug ?? [], JSON_UNESCAPED_UNICODE); ?>;
-        const menuTree = <?php echo json_encode($menuTree ?? [], JSON_UNESCAPED_UNICODE); ?>;
-        
-        console.log("=== Sidebar Position ID Debug ===");
-        console.log("Position IDs:", positionIds);
-        console.log("Position IDs count:", positionIds.length);
-        console.log("Session Debug:", sessionDebug);
-        console.log("Position ID from user_data:", sessionDebug.position_id_from_user_data);
-        console.log("Position ID from root session:", sessionDebug.position_id_from_root);
-        console.log("Position list from user_data:", sessionDebug.position_list_from_user_data);
-        console.log("Has user_data:", sessionDebug.has_user_data);
-        console.log("User data keys:", sessionDebug.user_data_keys);
-        console.log("Menu categories loaded:", <?php echo count($menuTree ?? []); ?>);
-        
-        // Debug: Count menus per position
-        if (positionIds.length > 0) {
-            console.log("\n=== Menu Count Analysis ===");
-            positionIds.forEach((posId, index) => {
-                console.log(`Position ID ${posId}:`, {
-                    index: index,
-                    is_primary: index === 0 ? 'Yes (from user_data.position_id)' : 'No'
-                });
-            });
-            
-            // Count total menu items
-            let totalMenuItems = 0;
-            let menuItemsByCategory = {};
-            
-            function countMenuItems(menu, category = null) {
-                const cat = menu.category || category || 'Uncategorized';
-                if (!menuItemsByCategory[cat]) {
-                    menuItemsByCategory[cat] = 0;
-                }
-                menuItemsByCategory[cat]++;
-                totalMenuItems++;
-                
-                if (menu.children && menu.children.length > 0) {
-                    menu.children.forEach(child => {
-                        countMenuItems(child, cat);
-                    });
-                }
-            }
-            
-            menuTree.forEach(menu => {
-                countMenuItems(menu);
-            });
-            
-            console.log("Total menu items:", totalMenuItems);
-            console.log("Menu items by category:", menuItemsByCategory);
-            console.log("\n💡 Note: If position_id 2 has fewer menus, check:");
-            console.log("   1. Menu permissions in tb_menu_permissions table");
-            console.log("   2. If position_id 2 has is_granted=false for some menus");
-            console.log("   3. If position_id 1 has more permissions than position_id 2");
+        let userData = null;
+        try {
+            userData = JSON.parse(sessionStorage.getItem("raot_user_session") || "null");
+        } catch (e) {
+            userData = null;
         }
-        
-        if (positionIds.length === 0) {
-            console.warn("⚠️ No position IDs found in session! Menus may not be filtered correctly.");
-        } else {
-            console.log("✅ Position IDs found:", positionIds);
-        }
-        
-        console.log("Dynamic sidebar loaded successfully");
-
-        const userData = JSON.parse(sessionStorage.getItem("raot_user_session"));
-        const hasMatchAPHOP = userData?.position_list_id.some(id => ['6'].includes(id));
+        const hasMatchAPHOP = Array.isArray(userData?.position_list_id)
+            && userData.position_list_id.some(id => ['6'].includes(String(id)));
 
         if (hasMatchAPHOP) {
             document.querySelectorAll('.side-menu__label').forEach(function(el) {
