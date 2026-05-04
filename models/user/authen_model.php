@@ -11,6 +11,10 @@ class AuthenModel
 
     public function loginUser($user_code, $user_pass)
     {
+        if (!($this->conn instanceof \PgSql\Connection)) {
+            return ['status' => 'error', 'message' => 'Database connection failed'];
+        }
+
         $query = "SELECT * FROM users.tb_users WHERE user_code = $1";
         $result = pg_query_params($this->conn, $query, [$user_code]);
 

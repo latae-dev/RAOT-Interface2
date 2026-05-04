@@ -14,9 +14,10 @@ class Database
 
     private $db_configs = [
         'raot_db_qas' => [
-            'host' => '172.0.0.1',
+            // ค่า fallback เมื่อไม่มี env — สอดคล้อง d:\docker-db (user admin) + DB ชื่อ postgres
+            'host' => '127.0.0.1',
             'db_name' => 'postgres',
-            'username' => 'postgres',
+            'username' => 'admin',
             'password' => 'password'
         ],
     ];
@@ -44,14 +45,18 @@ class Database
         ];
         foreach ($envOverrides as $key => $value) {
             if ($value !== false && $value !== '') {
-                $config[$key] = $value;
+                $config[$key] = is_string($value) ? trim($value, " \t\r\n\0\x0B") : $value;
             }
         }
 
         try {
             // เช็คว่ามี pg_connect หรือไม่
             if (function_exists('pg_connect')) {
-                $this->conn = pg_connect("host={$config['host']} dbname={$config['db_name']} user={$config['username']} password={$config['password']}");
+                $this->conn = @pg_connect("host={$config['host']} dbname={$config['db_name']} user={$config['username']} password={$config['password']}");
+                if ($this->conn === false) {
+                    $this->conn = null;
+                    error_log('PostgreSQL pg_connect failed for host ' . $config['host']);
+                }
             } else {
                 // ใช้ PDO แทน
                 $dsn = "pgsql:host={$config['host']};dbname={$config['db_name']}";
