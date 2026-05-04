@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# ตรวจสอบว่า URL เป็น http://localhost/raot (ไม่มี path ต่อท้าย)
+RewriteCond %{HTTP_HOST} ^localhost$ [NC]
+RewriteCond %{REQUEST_URI} ^/parcel-management-system/?$ 
+RewriteRule ^$ /parcel-management-system/pages/ [L,R=302]

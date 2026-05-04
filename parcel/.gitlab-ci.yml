@@ -1,0 +1,33 @@
+stages:
+  - deploy
+
+deploy-dev-s1:
+  stage: deploy
+  tags:
+    - site-dev
+  script:
+    - echo "🚀 Deploy parcel-management-system (branch dev-s1)"
+
+    # clone ครั้งแรกถ้าโฟลเดอร์ยังไม่มี
+    - |
+      if [ ! -d /var/www/html/parcel-management-system/.git ]; then
+        git clone -b dev-s1 git@gitlab.com:parcel4/parcel-management-system.git /var/www/html/parcel-management-system
+      fi
+
+    - cd /var/www/html/parcel-management-system
+    - git config --global --add safe.directory /var/www/html/parcel-management-system
+
+    # ✅ reset permission ก่อน pull code
+    - sudo chown -R gitlab-runner:apache /var/www/html/parcel-management-system
+    - sudo chmod -R 775 /var/www/html/parcel-management-system
+
+    # อัปเดตโค้ดล่าสุดจาก remote
+    - git fetch origin dev-s1 && git reset --hard origin/dev-s1
+
+    # ✅ ensure export folder exists & writable
+    - mkdir -p /var/www/html/parcel-management-system/pages/export
+    - sudo chown -R gitlab-runner:apache /var/www/html/parcel-management-system/pages/export
+    - sudo chmod -R 775 /var/www/html/parcel-management-system/pages/export
+
+  only:
+    - dev-s1

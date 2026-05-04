@@ -1,0 +1,4 @@
+Type,Posting Date,Document Date,Reference,Expense G/L,Cost Center,Fund,Fund Area,Expense Amount,Expense Text,Employee No,Reimburse Amt,Reimburse Text,Assignment,Profit Center,Due Date,Business Area,Commitment Item,VAT G/L,TAX CODE,TAX RATE,TAX DATE,VAT BASE,VAT AMOUNT
+2,06.02.2026,06.02.2026,69M0004,,10000,R1494,14008004,42000.00,,EH10001U,42000.00,,69W0019,,,1494,,,,,,,
+2,06.02.2026,06.02.2026,69T0018,5010400010,10000,R1494,14008004,12000,ค่าเบี้ยเลี้ยงในการเดินทางในประเทศ,EH10001U,12000,ค่าเบี้ยเลี้ยงในการเดินทางในประเทศ,69W0019,,,1494,5010400010,,,,,,
+2,06.02.2026,06.02.2026,69T0018,5010400030,10000,R1494,14008004,18000,ค่าที่พักในการเดินทางในประเทศ,EH10001U,18000,ค่าที่พักในการเดินทางในประเทศ,69W0019,,,1494,5010400030,,,,,,

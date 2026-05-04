@@ -1,0 +1,8 @@
+{
+    "sarabun": {
+        "normal": "C:\\inetpub\\wwwroot\\interface\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_normal_af600414ff7f3829cc6c6fc67265a0fc",
+        "bold": "C:\\inetpub\\wwwroot\\interface\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_bold_14df09d9b21994e9f8956dd3ff0d0f92",
+        "italic": "C:\\inetpub\\wwwroot\\interface\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_italic_a679c15f3890718affa15c81ef9dfc29",
+        "bold_italic": "sarabun_bold_italic_f9b0a1b8cd9ac37736cc67a3eb011a5f"
+    }
+}

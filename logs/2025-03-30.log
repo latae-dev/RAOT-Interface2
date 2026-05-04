@@ -1,0 +1,24 @@
+[30-Mar-2025 14:32:19 Europe/Berlin] PHP Warning:  Undefined array key "role_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 76
+[30-Mar-2025 14:32:19 Europe/Berlin] PHP Warning:  Undefined array key "position_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 77
+[30-Mar-2025 14:32:19 Europe/Berlin] PHP Warning:  Undefined array key "depart_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 78
+[30-Mar-2025 14:32:19 Europe/Berlin] PHP Warning:  Undefined array key "branch_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 79
+[30-Mar-2025 14:33:50 Europe/Berlin] PHP Warning:  Undefined array key "role_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 76
+[30-Mar-2025 14:33:50 Europe/Berlin] PHP Warning:  Undefined array key "position_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 77
+[30-Mar-2025 14:33:50 Europe/Berlin] PHP Warning:  Undefined array key "depart_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 78
+[30-Mar-2025 14:33:50 Europe/Berlin] PHP Warning:  Undefined array key "branch_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 79
+[30-Mar-2025 14:34:07 Europe/Berlin] PHP Warning:  Undefined array key "role_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 76
+[30-Mar-2025 14:34:07 Europe/Berlin] PHP Warning:  Undefined array key "position_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 77
+[30-Mar-2025 14:34:07 Europe/Berlin] PHP Warning:  Undefined array key "depart_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 78
+[30-Mar-2025 14:34:07 Europe/Berlin] PHP Warning:  Undefined array key "branch_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 79
+[30-Mar-2025 14:35:42 Europe/Berlin] PHP Warning:  Undefined array key "role_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 76
+[30-Mar-2025 14:35:42 Europe/Berlin] PHP Warning:  Undefined array key "position_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 77
+[30-Mar-2025 14:35:42 Europe/Berlin] PHP Warning:  Undefined array key "depart_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 78
+[30-Mar-2025 14:35:42 Europe/Berlin] PHP Warning:  Undefined array key "branch_id" in C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php on line 79
+[30-Mar-2025 14:53:42 Europe/Berlin] PHP Warning:  pg_query_params(): Query failed: ERROR:  invalid input syntax for type date: &quot;&quot;
+CONTEXT:  unnamed portal parameter $6 = '' in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php on line 242
+[30-Mar-2025 14:53:48 Europe/Berlin] PHP Warning:  pg_query_params(): Query failed: ERROR:  invalid input syntax for type date: &quot;&quot;
+CONTEXT:  unnamed portal parameter $6 = '' in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php on line 242
+[30-Mar-2025 14:54:26 Europe/Berlin] PHP Warning:  pg_query_params(): Query failed: ERROR:  invalid input syntax for type date: &quot;&quot;
+CONTEXT:  unnamed portal parameter $12 = '' in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php on line 242
+[30-Mar-2025 14:55:14 Europe/Berlin] PHP Warning:  pg_query_params(): Query failed: ERROR:  invalid input syntax for type date: &quot;&quot;
+CONTEXT:  unnamed portal parameter $12 = '' in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php on line 242

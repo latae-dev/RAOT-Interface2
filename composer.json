@@ -1,0 +1,12 @@
+{
+    "require": {
+        "dompdf/dompdf": "^3.1",
+        "mpdf/mpdf": "^8.0",
+        "mikehaertl/phpwkhtmltopdf": "^2.5",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
+        "tecnickcom/tcpdf": "^6.10",
+        "mikehaertl/php-pdftk": "dev-master",
+        "phpoffice/phpspreadsheet": "^5.1"
+    }
+}

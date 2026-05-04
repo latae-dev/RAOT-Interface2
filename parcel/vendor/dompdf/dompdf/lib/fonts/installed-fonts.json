@@ -1,0 +1,16 @@
+{
+    "sarabun": {
+        "normal": "C:\\inetpub\\wwwroot\\interfaces\\parcel\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_normal_8c457bd3305d82d3287ddea2c7bb1bb7",
+        "bold": "C:\\inetpub\\wwwroot\\interfaces\\parcel\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_bold_66e47125090aef9db29c79e80fb85665",
+        "italic": "C:\\inetpub\\wwwroot\\interfaces\\parcel\\vendor\\dompdf\\dompdf\/lib\/fonts\/sarabun_italic_a907bc3d6a1def993068178249e493a8",
+        "bold_italic": "sarabun_bold_italic_f48d1679b6e3d15fc03bb9cb0440829f"
+    },
+    "thsarabunnew": {
+        "normal": "C:\\inetpub\\wwwroot\\interfaces\\parcel\\vendor\\dompdf\\dompdf\/lib\/fonts\/thsarabunnew_normal_61b37597dfd82f707b18453757e33048",
+        "bold": "thsarabunnew_bold_866737cf51ba1436a45a8e22ee033738"
+    },
+    "prompt": {
+        "normal": "C:\\inetpub\\wwwroot\\interfaces\\parcel\\vendor\\dompdf\\dompdf\/lib\/fonts\/prompt_normal_ee03f6a86d43f97973a5ec7d6f411027",
+        "bold": "prompt_bold_200200abdcc9d80a3a43df5fd4506896"
+    }
+}

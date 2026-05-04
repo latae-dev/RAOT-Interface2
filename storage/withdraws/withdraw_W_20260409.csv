@@ -1,0 +1,4 @@
+TYPE,Posting Date,Document Date,Reference,Expense G/L,Cost Center,Fund,Fund Area,Expense Amount,Expense Text,Employee No,Reimburse Amt,Reimburse Text,Assignment,Profit Center,Due Date,Business Area,Commitment,VAT G/L,TAX CODE,TAX RATE,TAX DATE,VAT BASE,VAT AMOUNT
+1,08.04.2026,08.04.2026,69W0055,,,,,,,10100U1,4800.00,เบิกเงินยืมทดรอง,69W0055,10100,08.04.2026,1491,,,,,,,
+1,08.04.2026,08.04.2026,69W0058,,,,,,,10500U1,6000.00,เบิกเงินยืมทดรอง,69W0058,10500,08.04.2026,1492,,,,,,,
+1,08.04.2026,08.04.2026,69W0059,,,,,,,19200U1,6000.00,เบิกเงินยืมทดรอง,69W0059,19200,08.04.2026,1492,,,,,,,

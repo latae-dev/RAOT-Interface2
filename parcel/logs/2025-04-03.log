@@ -1,0 +1,70 @@
+[03-Apr-2025 14:00:39 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:00:39 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query_params(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php:31
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php(31): pg_query_params(false, 'SELECT COUNT(*)...', Array)
+#1 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(111): DocModel->readAllDoc('master', '10', '0', '', '', '', '')
+#2 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(43): DocController->readAll('master', '10', '0', '', '', '', '')
+#3 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(136): DocController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php on line 31
+[03-Apr-2025 14:01:00 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:01:00 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php:15
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php(15): pg_query(false, 'SELECT * FROM p...')
+#1 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(61): CountUnitModel->readCountUnit()
+#2 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(41): ParameterController->getParameters()
+#3 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(77): ParameterController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php on line 15
+[03-Apr-2025 14:01:22 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:01:22 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query_params(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php:89
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php(89): pg_query_params(false, 'SELECT COUNT(*)...', Array)
+#1 C:\xampp\htdocs\raot\raot\controllers\parcels\plan_controller.php(132): PlanModel->readAllSearch('master', '10', '0', '', '', '', '')
+#2 C:\xampp\htdocs\raot\raot\controllers\parcels\plan_controller.php(41): PlanController->readAllSearch('master', '10', '0', '', '', '', '')
+#3 C:\xampp\htdocs\raot\raot\controllers\parcels\plan_controller.php(151): PlanController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parcels\plan_model.php on line 89
+[03-Apr-2025 14:01:43 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:01:43 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php:15
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php(15): pg_query(false, 'SELECT * FROM p...')
+#1 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(61): CountUnitModel->readCountUnit()
+#2 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(41): ParameterController->getParameters()
+#3 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(77): ParameterController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php on line 15
+[03-Apr-2025 14:02:04 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:02:04 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query_params(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php:31
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php(31): pg_query_params(false, 'SELECT COUNT(*)...', Array)
+#1 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(111): DocModel->readAllDoc('master', '10', '0', '', '', '', '')
+#2 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(43): DocController->readAll('master', '10', '0', '', '', '', '')
+#3 C:\xampp\htdocs\raot\raot\controllers\parcels\doc_controller.php(136): DocController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parcels\doc_model.php on line 31
+[03-Apr-2025 14:02:25 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:02:25 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php:15
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php(15): pg_query(false, 'SELECT * FROM p...')
+#1 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(61): CountUnitModel->readCountUnit()
+#2 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(41): ParameterController->getParameters()
+#3 C:\xampp\htdocs\raot\raot\controllers\parameter\parameter_controller.php(77): ParameterController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\parameter\count_unit_model.php on line 15
+[03-Apr-2025 14:02:46 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[03-Apr-2025 14:02:46 Europe/Berlin] PHP Fatal error:  Maximum execution time of 120 seconds exceeded in C:\xampp\htdocs\raot\raot\configs\database.php on line 28

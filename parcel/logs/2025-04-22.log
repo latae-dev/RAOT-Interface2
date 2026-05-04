@@ -1,0 +1,11 @@
+[22-Apr-2025 11:01:34 Europe/Berlin] PHP Warning:  pg_connect(): Unable to connect to PostgreSQL server: could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host &quot;10.99.20.89&quot; and accepting
+	TCP/IP connections on port 5432? in C:\xampp\htdocs\raot\raot\configs\database.php on line 28
+[22-Apr-2025 11:01:34 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: pg_query_params(): Argument #1 ($connection) must be of type PgSql\Connection, bool given in C:\xampp\htdocs\raot\raot\models\user\authen_model.php:15
+Stack trace:
+#0 C:\xampp\htdocs\raot\raot\models\user\authen_model.php(15): pg_query_params(false, 'SELECT * FROM u...', Array)
+#1 C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php(67): AuthenModel->loginUser('E0001', 'E0001')
+#2 C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php(49): AuthenController->loginUser(Array)
+#3 C:\xampp\htdocs\raot\raot\controllers\user\authen_controller.php(120): AuthenController->processRequest()
+#4 {main}
+  thrown in C:\xampp\htdocs\raot\raot\models\user\authen_model.php on line 15
