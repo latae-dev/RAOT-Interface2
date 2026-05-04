@@ -16,8 +16,8 @@ class GenNumberModel
 
         do {
             // ตรวจสอบว่ามีการใช้เลขที่เอกสารสำหรับปีนี้แล้วหรือไม่
-            $query = "SELECT plan_number FROM parcels.tb_plans WHERE plan_number LIKE $1 ORDER BY plan_number DESC LIMIT 1";
-            $result = pg_query_params($this->conn, $query, array($currentYearShort . 'P%'));
+            $query = "SELECT plan_number FROM parcels.tb_plans WHERE plan_number LIKE $1 AND plan_number NOT LIKE $2 ORDER BY plan_number DESC LIMIT 1";
+            $result = pg_query_params($this->conn, $query, array($currentYearShort . 'P%', $currentYearShort . 'PM%'));
 
             if (!$result) {
                 echo "An error occurred: " . pg_last_error($this->conn) . "\n";
