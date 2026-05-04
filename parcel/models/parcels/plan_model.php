@@ -393,24 +393,59 @@ class PlanModel
 
     public function updateStatusPlans($data, $id)
     {
-        // ตรวจสอบว่ามีคีย์เพียงพอ
+        if (!is_array($data)) {
+            return json_encode(['status' => 'error', 'message' => 'Invalid payload.']);
+        }
+
+        if ($id === null || $id === '' || !is_numeric($id)) {
+            return json_encode(['status' => 'error', 'message' => 'Invalid id.']);
+        }
+        $id = (int) $id;
+        if ($id <= 0) {
+            return json_encode(['status' => 'error', 'message' => 'Invalid id.']);
+        }
+
+        // ลบ — sync กับ models/parcels/plan_model.php ที่ราก (parcel/controller โหลดไฟล์นี้)
+        $statusPlanNorm = isset($data['status_plan']) ? strtolower(trim((string) $data['status_plan'])) : '';
+        if ($statusPlanNorm === 'delete') {
+            $userVal = $data['user_requ'] ?? $data['user_branch'] ?? '';
+            $branchStatus = $data['status_branch'] ?? 'delete';
+            $queryUpdate = 'UPDATE parcels.tb_plans SET status_plan = $1, user_requ = $2, status_branch = $3, date_requ = $4 WHERE id = $5';
+            $params = ['delete', $userVal, $branchStatus, date('Y-m-d'), $id];
+            $resultUpdate = pg_query_params($this->conn, $queryUpdate, $params);
+            if (!$resultUpdate) {
+                return json_encode(['status' => 'error', 'message' => 'Failed to update status plan: ' . pg_last_error($this->conn)]);
+            }
+            return json_encode(['status' => 'success', 'message' => 'Status plan updated successfully.']);
+        }
+
+        if (isset($data['status_plan']) && count($data) < 4) {
+            $status = $data['status_plan'];
+            $userVal = $data['user_requ'] ?? $data['user_branch'] ?? '';
+            $branchStatus = $data['status_branch'] ?? $status;
+            $queryUpdate = 'UPDATE parcels.tb_plans SET status_plan = $1, user_requ = $2, status_branch = $3, date_requ = $4 WHERE id = $5';
+            $params = [$status, $userVal, $branchStatus, date('Y-m-d'), $id];
+            $resultUpdate = pg_query_params($this->conn, $queryUpdate, $params);
+            if (!$resultUpdate) {
+                return json_encode(['status' => 'error', 'message' => 'Failed to update status plan: ' . pg_last_error($this->conn)]);
+            }
+            return json_encode(['status' => 'success', 'message' => 'Status plan updated successfully.']);
+        }
+
         if (count($data) < 4) {
             return json_encode(['status' => 'error', 'message' => 'Invalid data keys.']);
         }
 
-        // ดึงคีย์และกำหนดให้ปลอดภัย
         $keys = array_keys($data);
         $status_plan_key = $keys[0] ?? null;
         $user_key = $keys[1] ?? null;
         $status_key = $keys[2] ?? null;
         $status_date_key = $keys[3] ?? null;
 
-        // ตรวจสอบว่าคีย์ทั้งหมดมีค่าจริง
         if (!$status_plan_key || !$user_key || !$status_key || !$status_date_key) {
             return json_encode(['status' => 'error', 'message' => 'Missing required keys.']);
         }
 
-        // สร้าง SQL Query
         $queryUpdate = "UPDATE parcels.tb_plans 
                     SET $status_plan_key = $1, 
                         $user_key = $2, 
@@ -418,7 +453,6 @@ class PlanModel
                         $status_date_key = $4  
                     WHERE id = $5";
 
-        // ป้องกันค่า null
         $params = [
             $data[$status_plan_key] ?? '',
             $data[$user_key] ?? '',
@@ -427,10 +461,8 @@ class PlanModel
             $id
         ];
 
-        // ทำการอัปเดตข้อมูล
         $resultUpdate = pg_query_params($this->conn, $queryUpdate, $params);
 
-        // ตรวจสอบผลลัพธ์
         if (!$resultUpdate) {
             return json_encode(['status' => 'error', 'message' => 'Failed to update status plan: ' . pg_last_error($this->conn)]);
         }
