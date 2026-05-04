@@ -11,6 +11,9 @@ class PositionUserModel
 
     public function readPositionList($userId)
     {
+        if ($userId === null || $userId === '') {
+            return [];
+        }
         try {
             $query = "SELECT p.* FROM users.tb_positions_users pu
                 join users.tb_positions p on p.id = pu.position_id

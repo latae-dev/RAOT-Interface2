@@ -1,14 +1,23 @@
-version: "3.8"
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: parcel-app
+    container_name: raot-interface-app
     ports:
-      - "8080:80"
+      # ใช้ 8890 แทน 8080 — พอร์ต 8080 มักถูก Adminer / stack อื่นใช้อยู่แล้ว
+      - "8890:80"
     volumes:
       - .:/var/www/html
+    env_file:
+      - .env
+    environment:
+      # ค่าเริ่มต้นให้เข้ากับสแต็ก d:\docker-db (user = admin; ฐานข้อมูลชื่อ postgres)
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_NAME: ${DB_NAME:-postgres}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      WKHTMLTOPDF_BIN: /usr/bin/wkhtmltopdf
+      PDFTK_BIN: /usr/bin/pdftk
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -89,6 +89,14 @@ class AuthenController
             $data['user_pass']
         );
 
+        if (isset($result['status']) && $result['status'] === 'error') {
+            echo json_encode([
+                'status' => 'error',
+                'message' => $result['message'] ?? 'Login failed',
+            ]);
+            return;
+        }
+
         if ($result) {
 
 
@@ -99,18 +107,18 @@ class AuthenController
             $branch = ($result['branch_id'] ?? null) ? ($this->branchModel->readBranchOne($result['branch_id']) ?: []) : [];
 
             if(!isset($branch['province_id'])){
-                $branch['province_id'] = $result['province_id'];
+                $branch['province_id'] = $result['province_id'] ?? null;
             }
             $province = ($branch['province_id'] ?? null) ? ($this->provinceModel->readProvinceOne($branch['province_id']) ?: []) : [];
 
             if(!isset($province['area_id'])){
-                $province['area_id'] = $result['areas_id'];
+                $province['area_id'] = $result['areas_id'] ?? null;
             }
 
             $area = ($province['area_id'] ?? null) ? ($this->areaModel->readAreaOne($province['area_id']) ?: []) : [];
 
             if(!isset($area['head_office_id'])){
-                $area['head_office_id'] = $result['head_office_id'];
+                $area['head_office_id'] = $result['head_office_id'] ?? null;
             }
 
             $head_office = ($area['head_office_id'] ?? null) ? ($this->head_officeModel->readHeadOfficeOne($area['head_office_id']) ?: []) : [];
@@ -126,7 +134,7 @@ class AuthenController
             // $head_office = $this->head_officeModel->readHeadOfficeOne($area['head_office_id']) ?? [];
             // $level =  $this->levelModel->readLevelOne($result['id']) ?? null;
 
-            $positionList = $this->positionUserModel->readPositionList($result['id']) ?? [];
+            $positionList = $this->positionUserModel->readPositionList($result['id'] ?? null) ?? [];
             $positionListId = [];
             $positionListCode = [];
             if (!empty($positionList)) {
@@ -263,7 +271,7 @@ class AuthenController
 
             echo json_encode(['status' => 'success', 'data' => $res]);
         } else {
-            echo json_encode(['status' => 'Error creating user']);
+            echo json_encode(['status' => 'error', 'message' => 'Login failed']);
         }
     }
 }
