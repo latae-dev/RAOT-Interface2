@@ -268,25 +268,37 @@ class PlanModel
     public function readAllSearchApprovelist($doc_type, $limit = 10, $offset = 0, $plan_number = null, $start_date = null, $end_date = null, $status_plan = null, $user_data = null)
     {
 
+        // เงื่อนไขรายการที่แต่ละระดับมีสิทธิ์เห็น (ใช้ plan_requ_level เป็นตัวบ่งบอกระดับที่ขอ)
         $or = "( user_requ = '".$user_data['user_code']."' ";
+
+        // 1) สาขาอนุมัติ: เห็นเฉพาะคำขอที่เริ่มจากสาขา และยังไม่ถูกรวมไฟล์
         if ($user_data['approve_branch'] == 'active'){
-            // $or .= " OR branch_id = '".$user_data['branch_id']."' ";
-            $or .= " OR ( branch_id = '".$user_data['branch_id']."' AND merge_provice ='no' ) "; // ถ้าเป็นสาขาที่มีสิทธิ์อนุมัติ
-        } // 1.กรณี user.approve_branch = 'active' เงื่อนไข branch_id = user.branch_id AND merge_provice = 'no'
+            $or .= " OR ( plan_requ_level = 'สาขา' AND branch_id = '".$user_data['branch_id']."' AND merge_provice ='no' ) ";
+        }
 
+        // 2) จังหวัดอนุมัติ: เห็นคำขอที่เริ่มจากสาขาหรือจังหวัด (สาขาอนุมัติแล้ว) ในจังหวัดของตน
         if ($user_data['approve_province'] == 'active'){
-            $or .= " OR ( province_id = '".$user_data['province_id']."' AND status_branch ='approve' ) "; // ถ้าเป็นจังหวัดที่มีสิทธิ์อนุมัติ
-        } // 2.กรณี user.approve_province = 'active' เงื่อนไข province_id = user.province_id AND status_branch = 'approve'
+            $or .= " OR ( plan_requ_level IN ('สาขา','จังหวัด') AND province_id = '".$user_data['province_id']."' AND merge_provice ='no' AND status_branch ='approve' ) ";
+        }
 
+        // 3) เขตอนุมัติ: เห็นได้สองทาง
+        //    3.1 คำขอที่เริ่มจากเขตของตน (ไม่ผ่านการรวมไฟล์)
+        //    3.2 รายการที่ถูกรวมไฟล์ขึ้นจากระดับล่างมาที่เขต และยังไม่ถูกรวมต่อ (status_merge='none')
         if ($user_data['approve_airea'] == 'active'){
-            $or .= " OR ( area_id = '".$user_data['area_id']."' AND status_branch ='approve' AND status_province ='approve' AND merge_provice ='yes' ) "; 
-            // ถ้าเป็นพื้นที่ที่มีสิทธิ์อนุมัติ
-        } // 3.กรณี user.approve_airea = 'active' เงื่อนไข area_id = user.area_id AND status_branch = 'approve' AND status_province = 'approve' AND merge_provice = 'yes'
+            $or .= " OR ( plan_requ_level = 'เขต' AND area_id = '".$user_data['area_id']."' AND merge_provice ='no' ) ";
+            $or .= " OR ( merge_provice ='yes' AND status_merge ='none' AND branch_type = 'เขต' AND area_id = '".$user_data['area_id']."' AND status_branch ='approve' AND status_province ='approve' ) ";
+        }
 
+        // 4) กยท อนุมัติ: เห็นได้สามทาง
+        //    4.1 คำขอที่เริ่มจาก กยท เอง
+        //    4.2 คำขอที่เริ่มจากเขต และเขตอนุมัติแล้ว (ไม่ต้องรวมไฟล์)
+        //    4.3 รายการที่ถูกรวมไฟล์มา และเขตอนุมัติแล้ว (ไม่ว่าเขตจะรวมต่อหรือไม่ก็ตาม)
+        //        ใช้ status_merge='none' กันรายการเก่าที่ถูกรวมต่อแล้วซ้อน และ status_area='approve' บ่งบอกว่าผ่านเขตแล้ว
         if ($user_data['approve_head_office'] == 'active'){
-            // $or .= " OR ( area_id = '".$user_data['area_id']."'AND status_branch ='approve'AND status_province ='approve' AND status_area ='approve' AND merge_provice ='yes' ) "; // ถ้าเป็นสำนักงานที่มีสิทธิ์อนุมัติ
-            $or .= " OR ( status_branch ='approve'AND status_province ='approve' AND status_area ='approve' AND merge_provice ='yes' ) "; // ถ้าเป็นสำนักงานที่มีสิทธิ์อนุมัติ
-        } // 4.กรณี user.approve_head_office = 'active' เงื่อนไข area_id = user.area_id AND status_branch = 'approve' AND status_province = 'approve' AND status_area = 'approve' AND merge_provice = 'yes'
+            $or .= " OR ( plan_requ_level = 'กยท' AND merge_provice ='no' ) ";
+            $or .= " OR ( plan_requ_level = 'เขต' AND merge_provice ='no' AND status_area ='approve' ) ";
+            $or .= " OR ( merge_provice ='yes' AND status_merge ='none' AND status_branch ='approve' AND status_province ='approve' AND status_area ='approve' ) ";
+        }
 
         $or .= " )";
 
@@ -380,14 +392,10 @@ class PlanModel
     public function readAllSearchMerge($doc_type, $limit = 10, $offset = 0, $plan_number = null, $start_date = null, $end_date = null, $status_plan = null, $user_data = null)
     {
 
-        // (item.status_merge === 'none') && (
-        //         (userObject.area_id === item.area_id &&
-        //             userObject.approve_province === 'active' &&
-        //             item.status_branch === 'approve' &&
-        //             item.status_province === 'approve')
-        //     )
-
-        $or = "( merge_provice = 'no' AND status_merge = 'none' ";
+        // หน้ารวมไฟล์ระดับจังหวัด: แสดงรายการต้นฉบับที่ยังไม่ถูกรวม
+        // เคสที่เห็น: คำขอจากสาขา (อนุมัติทั้งสาขา+จังหวัด) และคำขอจากจังหวัด (จังหวัดอนุมัติแล้ว)
+        // *เคสจากจังหวัด status_branch จะถูก auto-set เป็น approve ตั้งแต่สร้าง*
+        $or = "( merge_provice = 'no' AND status_merge = 'none' AND plan_requ_level IN ('สาขา','จังหวัด') ";
 
         if ($user_data['approve_province'] == 'active'){
             $or .= " AND ( area_id = '".$user_data['area_id']."' AND province_id = '".$user_data['province_id']."' AND status_branch ='approve' AND status_province ='approve' ) "; 
@@ -632,6 +640,26 @@ class PlanModel
         $time_deli_plan = ($time_deli_plan == '') ? null : $time_deli_plan;
         $time_pick_plan = ($time_pick_plan == '') ? null : $time_pick_plan;
 
+        // กำหนดสถานะอนุมัติของระดับที่ "ถูกข้าม" ให้เป็น approve อัตโนมัติตาม plan_requ_level
+        // (เคสคำขอเริ่มที่จังหวัด/เขต/กยท ให้ข้ามการอนุมัติของระดับล่างไปเลย)
+        $status_branch = 'pending';
+        $status_province = 'pending';
+        $status_area = 'pending';
+        switch ($plan_requ_level) {
+            case 'จังหวัด':
+                $status_branch = 'approve';
+                break;
+            case 'เขต':
+                $status_branch = 'approve';
+                $status_province = 'approve';
+                break;
+            case 'กยท':
+                $status_branch = 'approve';
+                $status_province = 'approve';
+                $status_area = 'approve';
+                break;
+        }
+
         // สร้างคำสั่ง SQL INSERT พร้อม RETURNING
         $query = "INSERT INTO parcels.tb_plans (
         plan_number,
@@ -669,9 +697,12 @@ class PlanModel
         at_close,
         const_id,
         doc_type,
-        province_name
+        province_name,
+        status_branch,
+        status_province,
+        status_area
     ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
     ) RETURNING id";
 
         // ใช้ pg_query_params เพื่อเตรียมคำสั่ง SQL และส่งข้อมูล
@@ -711,7 +742,10 @@ class PlanModel
             $at_close === null ? 'NULL' : ($at_close ? 'TRUE' : 'FALSE'),
             $const_id === null ? 'NULL' : ($const_id ? 'TRUE' : 'FALSE'),
             $doc_type,
-            $province_name
+            $province_name,
+            $status_branch,
+            $status_province,
+            $status_area
         ));
 
         // ตรวจสอบผลลัพธ์ของการทำงาน

@@ -87,15 +87,9 @@ async function fetchData(page = 1) {
         console.log(data);
 
 
-        // 🔍 คัดกรองเฉพาะรายการที่ user สามารถอนุมัติได้
-        const data_use = data.data.filter(item =>
-            (item.status_merge === 'none') && (
-                (userObject.area_id === item.area_id &&
-                    userObject.approve_province === 'active' &&
-                    item.status_branch === 'approve' &&
-                    item.status_province === 'approve')
-            )
-        );
+        // ใช้ผลลัพธ์จาก backend ตรงๆ เพราะ readAllSearchMerge() ใน plan_model
+        // คัดกรองสิทธิ์/สถานะให้แล้ว ไม่ต้องกรองซ้ำที่ฝั่ง client
+        const data_use = data.data;
 
         // 📋 แสดงข้อมูล
         let data_lenght = 0;
