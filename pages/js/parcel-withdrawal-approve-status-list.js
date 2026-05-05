@@ -133,6 +133,13 @@ async function fetchData(page = 1) {
             // กำหนดสถานะรวมไฟล์
             const status_merge_thai = item.status_merge === 'active' ? '<span class="badge rounded-pill bg-success">ดำเนินการรวมไฟล์</span>' : (item.status_merge === '-' ? '<span class="badge rounded-pill bg-danger">ยังไม่รวมไฟล์</span>' : '-');
 
+            // ถ้าผู้ขอเป็นระดับเขต/กยท จะไม่มี province_name (เก็บเป็น 'N/A') ให้แสดงชื่อระดับแทน
+            const hasProvince = item.province_name && item.province_name !== 'N/A' && item.province_name !== '-';
+            const levelFallback = item.plan_requ_level === 'เขต' ? 'ระดับเขต'
+                : item.plan_requ_level === 'กยท' ? 'ระดับสำนักงานใหญ่'
+                : '-';
+            const provinceDisplay = hasProvince ? item.province_name : levelFallback;
+
             // 🎯 สร้างแถวข้อมูลในตาราง
             const row = document.createElement('tr');
             row.classList.add('crm-contact', 'text-center');
@@ -142,7 +149,7 @@ async function fetchData(page = 1) {
                 <td>${convertToBuddhistEra(item.created_at)}</td>
                 <td>${item.plan_number}</td>
                 <td>${planRequAllString}</td> <!-- ใช้ planRequAllString ที่แปลงแล้ว -->
-                <td>${item.province_name || '-'}</td> <!-- จังหวัด -->
+                <td>${provinceDisplay}</td> <!-- จังหวัด -->
                 <td>${status_merge_thai}</td>
                 <td>${status_branch_thai}</td> <!-- สถานะสาขา -->
                 <td>${status_province_thai}</td> <!-- สถานะจังหวัด -->
