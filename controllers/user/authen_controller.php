@@ -134,8 +134,19 @@ class AuthenController
                     $positionListId[] = $value['id'];
                     $positionListCode[] = $value['position_code'];
                 }
-            } 
+            }
 
+            $departTypeName = $depart['depart_type_name'] ?? null;
+            $branchTypeFromDepart = null;
+            if ($departTypeName === 'branch') {
+                $branchTypeFromDepart = 'สาขา';
+            } elseif ($departTypeName === 'province') {
+                $branchTypeFromDepart = 'จังหวัด';
+            } elseif ($departTypeName === 'area') {
+                $branchTypeFromDepart = 'เขต';
+            } elseif ($departTypeName === 'hq') {
+                $branchTypeFromDepart = 'กยท';
+            }
 
             $res = [
                 /* users */
@@ -178,12 +189,13 @@ class AuthenController
                 "depart_id" => $depart['id'] ?? null,
                 "depart_code" => $depart['depart_code'] ?? 'N/A',
                 "depart_name" => $depart['depart_name'] ?? 'N/A',
+                "depart_type_name" => $departTypeName,
 
                 // branch
                 "branch_id" => $branch['id'] ?? null,
                 "branch_code" => $branch['branch_code'] ?? 'N/A',
                 "branch_name" => $branch['branch_name'] ?? 'N/A',
-                "branch_type" => $branch['branch_type'] ?? null,  // ไม่มีใน VIEW แล้ว (ใช้ depart_type_id แทน)
+                "branch_type" => $branch['branch_type'] ?? $branchTypeFromDepart,
 
                 // province
                 "province_id" => $province['id'] ?? null,
