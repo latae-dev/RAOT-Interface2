@@ -217,26 +217,58 @@ async function createData(doc_type) {
         tb_plan_mats.push(rowData);
     });
 
-    // ดึงค่าจากฟอร์ม ระดับที่ต้อง merce สาขา,จังหวัด,เขต, กยท
+    // ระดับคำขอ: ใช้ประเภทหน่วยสังกัด (depart_type_name) ก่อน — ตรงกับตารางหน่วย; จากนั้น branch_type เซสชัน แล้วจึงรหัสตำแหน่ง
     let branch_type_merc = '-'
     let plan_requ_level = '-'
-    if (userObject.position_code == 'EMPY') {
-        branch_type_merc = 'สาขา';
-        plan_requ_level = 'สาขา';
-    } else if (userObject.position_code == 'APBR') {
-        branch_type_merc = 'สาขา';
-        plan_requ_level = 'สาขา';
-    }else if (userObject.position_code == 'APPV') {
-        branch_type_merc = 'จังหวัด';
-        plan_requ_level = 'จังหวัด';
-    } else if (userObject.position_code == 'APAR') {
-        branch_type_merc = 'เขต';
-        plan_requ_level = 'เขต';
-    } else if (userObject.position_code == 'APHO') {
-        branch_type_merc = 'กยท';
-        plan_requ_level = 'กยท';
+
+    const dtn = String(userObject.depart_type_name ?? '').trim().toLowerCase()
+    if (dtn === 'area') {
+        branch_type_merc = 'เขต'
+        plan_requ_level = 'เขต'
+    } else if (dtn === 'province') {
+        branch_type_merc = 'จังหวัด'
+        plan_requ_level = 'จังหวัด'
+    } else if (dtn === 'branch') {
+        branch_type_merc = 'สาขา'
+        plan_requ_level = 'สาขา'
+    } else if (dtn === 'hq') {
+        branch_type_merc = 'กยท'
+        plan_requ_level = 'กยท'
     }
-    
+
+    if (plan_requ_level === '-') {
+        const orgBranchType = userObject.branch_type
+        if (orgBranchType === 'เขต') {
+            branch_type_merc = 'เขต'
+            plan_requ_level = 'เขต'
+        } else if (orgBranchType === 'จังหวัด') {
+            branch_type_merc = 'จังหวัด'
+            plan_requ_level = 'จังหวัด'
+        } else if (orgBranchType === 'สาขา') {
+            branch_type_merc = 'สาขา'
+            plan_requ_level = 'สาขา'
+        }
+    }
+
+    if (plan_requ_level === '-') {
+        if (userObject.position_code == 'EMPY') {
+            branch_type_merc = 'สาขา';
+            plan_requ_level = 'สาขา';
+        } else if (userObject.position_code == 'APBR') {
+            branch_type_merc = 'สาขา';
+            plan_requ_level = 'สาขา';
+        } else if (userObject.position_code == 'APPV') {
+            branch_type_merc = 'จังหวัด';
+            plan_requ_level = 'จังหวัด';
+        } else if (userObject.position_code == 'APAR') {
+            branch_type_merc = 'เขต';
+            plan_requ_level = 'เขต';
+        } else if (userObject.position_code == 'APHO') {
+            branch_type_merc = 'กยท';
+            plan_requ_level = 'กยท';
+        }
+    }
+
     const data_sent = {
         tb_plans: {
             doc_type: doc_type,

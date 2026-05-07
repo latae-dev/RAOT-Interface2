@@ -269,24 +269,26 @@ class PlanModel
     {
 
         // เงื่อนไขรายการที่แต่ละระดับมีสิทธิ์เห็น (ใช้ plan_requ_level เป็นตัวบ่งบอกระดับที่ขอ)
+        // merge_provice: ค่ามาตรฐานคือ 'no'; รองรับข้อมูลผิดพลาด เช่น 'nu'
+        $mp_not_merged = "merge_provice IN ('no','nu')";
         $or = "( user_requ = '".$user_data['user_code']."' ";
 
         // 1) สาขาอนุมัติ: เห็นเฉพาะคำขอที่เริ่มจากสาขา และยังไม่ถูกรวมไฟล์
         if ($user_data['approve_branch'] == 'active'){
-            $or .= " OR ( plan_requ_level = 'สาขา' AND branch_id = '".$user_data['branch_id']."' AND merge_provice ='no' ) ";
+            $or .= " OR ( plan_requ_level IN ('สาขา','branch') AND branch_id = '".$user_data['branch_id']."' AND $mp_not_merged ) ";
         }
 
         // 2) จังหวัดอนุมัติ: เห็นคำขอที่เริ่มจากสาขาหรือจังหวัด (สาขาอนุมัติแล้ว) ในจังหวัดของตน
         if ($user_data['approve_province'] == 'active'){
-            $or .= " OR ( plan_requ_level IN ('สาขา','จังหวัด') AND province_id = '".$user_data['province_id']."' AND merge_provice ='no' AND status_branch ='approve' ) ";
+            $or .= " OR ( plan_requ_level IN ('สาขา','branch','จังหวัด','province') AND province_id = '".$user_data['province_id']."' AND $mp_not_merged AND status_branch ='approve' ) ";
         }
 
         // 3) เขตอนุมัติ: เห็นได้สองทาง
         //    3.1 คำขอที่เริ่มจากเขตของตน (ไม่ผ่านการรวมไฟล์)
         //    3.2 รายการที่ถูกรวมไฟล์ขึ้นจากระดับล่างมาที่เขต และยังไม่ถูกรวมต่อ (status_merge='none')
         if ($user_data['approve_airea'] == 'active'){
-            $or .= " OR ( plan_requ_level = 'เขต' AND area_id = '".$user_data['area_id']."' AND merge_provice ='no' ) ";
-            $or .= " OR ( merge_provice ='yes' AND status_merge ='none' AND branch_type = 'เขต' AND area_id = '".$user_data['area_id']."' AND status_branch ='approve' AND status_province ='approve' ) ";
+            $or .= " OR ( plan_requ_level IN ('เขต','area') AND area_id = '".$user_data['area_id']."' AND $mp_not_merged ) ";
+            $or .= " OR ( merge_provice ='yes' AND status_merge ='none' AND branch_type IN ('เขต','area') AND area_id = '".$user_data['area_id']."' AND status_branch ='approve' AND status_province ='approve' ) ";
         }
 
         // 4) กยท อนุมัติ: เห็นได้สามทาง
@@ -295,8 +297,8 @@ class PlanModel
         //    4.3 รายการที่ถูกรวมไฟล์มา และเขตอนุมัติแล้ว (ไม่ว่าเขตจะรวมต่อหรือไม่ก็ตาม)
         //        ใช้ status_merge='none' กันรายการเก่าที่ถูกรวมต่อแล้วซ้อน และ status_area='approve' บ่งบอกว่าผ่านเขตแล้ว
         if ($user_data['approve_head_office'] == 'active'){
-            $or .= " OR ( plan_requ_level = 'กยท' AND merge_provice ='no' ) ";
-            $or .= " OR ( plan_requ_level = 'เขต' AND merge_provice ='no' AND status_area ='approve' ) ";
+            $or .= " OR ( plan_requ_level IN ('กยท','head_office') AND $mp_not_merged ) ";
+            $or .= " OR ( plan_requ_level IN ('เขต','area') AND $mp_not_merged AND status_area ='approve' ) ";
             $or .= " OR ( merge_provice ='yes' AND status_merge ='none' AND status_branch ='approve' AND status_province ='approve' AND status_area ='approve' ) ";
         }
 
@@ -395,7 +397,7 @@ class PlanModel
         // หน้ารวมไฟล์ระดับจังหวัด: แสดงรายการต้นฉบับที่ยังไม่ถูกรวม
         // เคสที่เห็น: คำขอจากสาขา (อนุมัติทั้งสาขา+จังหวัด) และคำขอจากจังหวัด (จังหวัดอนุมัติแล้ว)
         // *เคสจากจังหวัด status_branch จะถูก auto-set เป็น approve ตั้งแต่สร้าง*
-        $or = "( merge_provice = 'no' AND status_merge = 'none' AND plan_requ_level IN ('สาขา','จังหวัด') ";
+        $or = "( merge_provice IN ('no','nu') AND status_merge = 'none' AND plan_requ_level IN ('สาขา','branch','จังหวัด','province') ";
 
         if ($user_data['approve_province'] == 'active'){
             $or .= " AND ( area_id = '".$user_data['area_id']."' AND province_id = '".$user_data['province_id']."' AND status_branch ='approve' AND status_province ='approve' ) "; 
@@ -591,6 +593,10 @@ class PlanModel
     // ฟังก์ชันสำหรับการสร้าง plan ใหม่
     public function createPlan($data)
     {
+        if (isset($data['tb_plans']) && is_array($data['tb_plans'])) {
+            $this->applyCanonicalPlanRequLevelFromSession($data);
+        }
+
         // ตรวจสอบค่าที่ส่งมาว่ามีหรือไม่ ถ้าไม่มีให้ใช้ค่า NULL แทน
         $plan_number = isset($data['tb_plans']['plan_number']) ? $data['tb_plans']['plan_number'] : null;
         $plan_number_first = isset($data['tb_plans']['plan_number_first']) ? $data['tb_plans']['plan_number_first'] : null;
@@ -647,13 +653,16 @@ class PlanModel
         $status_area = 'pending';
         switch ($plan_requ_level) {
             case 'จังหวัด':
+            case 'province':
                 $status_branch = 'approve';
                 break;
             case 'เขต':
+            case 'area':
                 $status_branch = 'approve';
                 $status_province = 'approve';
                 break;
             case 'กยท':
+            case 'head_office':
                 $status_branch = 'approve';
                 $status_province = 'approve';
                 $status_area = 'approve';
@@ -1170,5 +1179,45 @@ class PlanModel
         } else {
             return ["status" => "error", "message" => "Data query failed"];
         }
+    }
+
+    /** ใช้ข้อมูลผู้ล็อกอิน (เซสชัน) แทนค่าจากไคลเอนต์เมื่อระบุระดับได้ — กันแคช JS / sessionStorage เก่า */
+    private function applyCanonicalPlanRequLevelFromSession(array &$data): void
+    {
+        $u = $_SESSION['user_data'] ?? null;
+        if (!is_array($u)) {
+            return;
+        }
+        $level = $this->resolvePlanRequLevelFromSessionUser($u);
+        if ($level === null) {
+            return;
+        }
+        $data['tb_plans']['plan_requ_level'] = $level;
+        $data['tb_plans']['branch_type'] = $level;
+    }
+
+    /** @return 'สาขา'|'จังหวัด'|'เขต'|'กยท'|null */
+    private function resolvePlanRequLevelFromSessionUser(array $u): ?string
+    {
+        $dtn = strtolower(trim((string)($u['depart_type_name'] ?? '')));
+        if ($dtn === 'area') {
+            return 'เขต';
+        }
+        if ($dtn === 'province') {
+            return 'จังหวัด';
+        }
+        if ($dtn === 'branch') {
+            return 'สาขา';
+        }
+        if ($dtn === 'hq') {
+            return 'กยท';
+        }
+
+        $bt = $u['branch_type'] ?? null;
+        if (is_string($bt) && in_array($bt, ['สาขา', 'จังหวัด', 'เขต', 'กยท'], true)) {
+            return $bt;
+        }
+
+        return null;
     }
 }
