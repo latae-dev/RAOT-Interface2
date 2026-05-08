@@ -609,17 +609,14 @@ class DocModel
         return $result !== false;
     }
 
-    public function getDocByUserCode($quarter,$user_code)
+    public function getDocByPlanAndQuarter($quarter, $plan_id)
     {
-
-        // คืน stock
-        $query = "SELECT docs.doc_number,doc_mats.quarter, docs.user_requ
-                FROM parcels.tb_doc_mats AS doc_mats 
+        $query = "SELECT docs.doc_number, doc_mats.quarter, docs.plan_id
+                FROM parcels.tb_doc_mats AS doc_mats
                 RIGHT JOIN parcels.tb_docs AS docs ON doc_mats.doc_id = docs.id
-                WHERE doc_mats.quarter = $1 AND docs.user_requ = $2";
+                WHERE doc_mats.quarter = $1 AND docs.plan_id = $2";
 
-        // $query = "SELECT * FROM parcels.tb_docs WHERE doc_number = $1 AND user_requ = $2";
-        $result = pg_query_params($this->conn, $query, array($quarter,$user_code));
+        $result = pg_query_params($this->conn, $query, array($quarter, $plan_id));
 
         if (!$result) {
             echo "An error occurred: " . pg_last_error($this->conn) . "\n";
