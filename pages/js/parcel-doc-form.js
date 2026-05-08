@@ -33,7 +33,7 @@ async function beginFetch() {
 async function getPlanOne(id) {
     try {
         window.showLoading();
-        const response = await fetch(`../controllers/parcels/plan_controller.php?action=plan_one_and_check_doc&id=${id}&quarter=${quarter}&user_code=${userObject.user_code}`, {
+        const response = await fetch(`../controllers/parcels/plan_controller.php?action=plan_one_and_check_doc&id=${id}&quarter=${quarter}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -51,7 +51,7 @@ async function getPlanOne(id) {
 
         if(data.tb_doc_byuser){
             Swal.fire({
-                text: "1 User เบิกได้ 1 ครั้ง/ไตรมาส !!!",
+                text: "1 เอกสาร เบิกได้ 1 ครั้ง/ไตรมาส !!!",
                 icon: "warning"
             }).then(() => {
                 history.back();

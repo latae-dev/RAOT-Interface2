@@ -53,7 +53,7 @@ class PlanController
                 } elseif ($_GET['action'] == 'plan_one') {
                     $this->readPlanOne($_GET['id']);
                 } elseif ($_GET['action'] == 'plan_one_and_check_doc') {
-                    $this->readPlanOneAndCheckDoc($_GET['id'],$_GET['quarter'],$_GET['user_code']);
+                    $this->readPlanOneAndCheckDoc($_GET['id'], $_GET['quarter']);
                 }
                 break;
             case 'POST':
@@ -215,11 +215,11 @@ class PlanController
         echo json_encode(['status' => 'success', "tb_plans" => $tb_plans, "tb_plan_mats" => $tb_plan_mats]);
     }
 
-    public function readPlanOneAndCheckDoc($id,$quarter,$user_code)
+    public function readPlanOneAndCheckDoc($id, $quarter)
     {
         $tb_plans      = $this->planModel->readPlanOne($id);
         $tb_plan_mats  = $this->planMatModel->readPlanMatOne($id);
-        $tb_doc_byuser = $this->docModel->getDocByUserCode($quarter,$user_code);
+        $tb_doc_byuser = $this->docModel->getDocByPlanAndQuarter($quarter, $id);
         echo json_encode(['status' => 'success', "tb_plans" => $tb_plans, "tb_plan_mats" => $tb_plan_mats, "tb_doc_byuser" => $tb_doc_byuser]);
     }
 
