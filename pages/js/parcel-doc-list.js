@@ -1,5 +1,16 @@
 let userData;
-let userObject
+let userObject;
+
+function normVal(v) {
+    if (v === null || v === undefined) return '';
+    return String(v).trim();
+}
+
+function sameUserCode(sessionCode, rowCode) {
+    const a = normVal(sessionCode);
+    const b = normVal(rowCode);
+    return a !== '' && b !== '' && a === b;
+}
 
 export async function beginFetch() {
     try {
@@ -35,13 +46,14 @@ async function getAll(limit = 10, offset = 0, doc_number = '', start_date = '', 
         end_date = end_date === '' ? null : end_date;
         status_doc = status_doc === '' ? null : status_doc; */
 
+        const q = (s) => encodeURIComponent(s ?? '');
         const response = await fetch(`../controllers/parcels/doc_controller.php?action=doc_search_list&doc_type=master&
             limit=${limit}&
             offset=${offset}&
-            doc_number=${doc_number}&
-            start_date=${start_date}&
-            end_date=${end_date}&
-            status_doc=${status_doc}
+            doc_number=${q(doc_number)}&
+            start_date=${q(start_date)}&
+            end_date=${q(end_date)}&
+            status_doc=${q(status_doc)}
             `, {
             method: "GET",
             headers: {
@@ -73,10 +85,27 @@ async function fetchData(page = 1) {
         let end_date = document.querySelector("[name='end_date']")?.value || '';
         let status_doc = document.querySelector("[name='status_doc']")?.value || '';
 
+        const tableBody = document.getElementById('data-table');
+        if (!userObject || !normVal(userObject.user_code)) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่</td></tr>';
+            document.getElementById('showing-count').innerHTML = 'กำลังแสดง 0 รายการ';
+            return;
+        }
+
         const data = await getAll(limit, offset, doc_number, start_date, end_date, status_doc);
 
+        if (data.status === 'error') {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">' + (data.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์') + '</td></tr>';
+            document.getElementById('showing-count').innerHTML = 'กำลังแสดง 0 รายการ';
+            return;
+        }
+
+        if (!data.pagination || !Array.isArray(data.data)) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+            return;
+        }
+
         const { total_pages: totalPages, current_page: currentPage } = data.pagination;
-        const tableBody = document.getElementById('data-table');
         tableBody.innerHTML = '';
 
         if (!data.data.length) {
@@ -84,15 +113,18 @@ async function fetchData(page = 1) {
             return;
         }
 
+        let visibleRows = 0;
+
         data.data.forEach((item, index) => {
 
             if (
-                userObject.user_code === item.user_requ  || 
-                (userObject.branch_id === item.branch_id && userObject.approve_branch === 'active') || // ถ้าเป็นสาขาที่มีสิทธิ์อนุมัติ
-                (userObject.province_id === item.province_id && userObject.approve_province === 'active' && item.status_branch === 'approve') || // ถ้าเป็นจังหวัดที่มีสิทธิ์อนุมัติ
-                (userObject.area_id === item.area_id && userObject.approve_area === 'active' && item.status_branch === 'approve' && item.status_province === 'approve') || // ถ้าเป็นพื้นที่ที่มีสิทธิ์อนุมัติ
-                (userObject.head_office_id === item.head_office_id && userObject.approve_head_office === 'active' && item.status_branch === 'approve' && item.status_province === 'approve' && item.status_area === 'approve') // ถ้าเป็นสำนักงานที่มีสิทธิ์อนุมัติ
+                sameUserCode(userObject.user_code, item.user_requ) ||
+                (normVal(userObject.branch_id) === normVal(item.branch_id) && userObject.approve_branch === 'active') ||
+                (normVal(userObject.province_id) === normVal(item.province_id) && userObject.approve_province === 'active' && item.status_branch === 'approve') ||
+                (normVal(userObject.area_id) === normVal(item.area_id) && userObject.approve_area === 'active' && item.status_branch === 'approve' && item.status_province === 'approve') ||
+                (normVal(userObject.head_office_id) === normVal(item.head_office_id) && userObject.approve_head_office === 'active' && item.status_branch === 'approve' && item.status_province === 'approve' && item.status_area === 'approve')
             ) {
+                visibleRows += 1;
                 // 🎯 แปลงสถานะ `status_doc` เป็นภาษไทย
                 const statusLabels = {
                     pending: `<span class="badge rounded-pill bg-warning">รออนุมัติ</span>`,
@@ -129,7 +161,7 @@ async function fetchData(page = 1) {
                     <td>
                         <div class="hstack gap-2 fs-15">
                             <a href="parcel-doc-list-detail.php?id=${item.id}" class="btn btn-icon btn-sm btn-success-transparent rounded-pill"><i class="fe fe-eye"></i></a>
-                            ${item.status_doc === 'pending' && item.user_requ === userObject.user_code ? `
+                            ${item.status_doc === 'pending' && sameUserCode(userObject.user_code, item.user_requ) ? `
                                 <a href="parcel-doc-list-edit.php?id=${item.id}" class="btn btn-icon btn-sm btn-info-transparent rounded-pill"><i class="ri-edit-line"></i></a>
                                 <a href="#" class="btn btn-icon btn-sm btn-danger-transparent rounded-pill delete-btn" data-id="${item.id}"><i class="ri-delete-bin-line"></i></a>
                             ` : ''}
@@ -147,8 +179,11 @@ async function fetchData(page = 1) {
             }
         });
 
-        // 🎯 อัปเดตข้อความแสดงจำนวนข้อมูล
-        document.getElementById('showing-count').innerHTML = `กำลังแสดง ${data.data.length} รายการ <i class="bi bi-arrow-right ms-2 fw-semibold"></i>`;
+        if (visibleRows === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">ไม่มีรายการที่คุณมีสิทธิ์ดูในหน้านี้</td></tr>';
+        }
+
+        document.getElementById('showing-count').innerHTML = `กำลังแสดง ${visibleRows} รายการ <i class="bi bi-arrow-right ms-2 fw-semibold"></i>`;
 
         // 🎯 อัปเดต Pagination
         updatePagination(totalPages, currentPage);
@@ -162,7 +197,6 @@ async function updateStatus(status_doc, id) {
         status_doc: status_doc,
         user_res_1: userObject.user_code
     }
-    console.log(data_sent); // แสดงค่าใน Console เพื่อตรวจสอบ
     try {
         window.showLoading();
         const response = await fetch(`../controllers/parcels/doc_controller.php?action=update_status&id=${id}`, {
@@ -172,8 +206,6 @@ async function updateStatus(status_doc, id) {
         });
         window.hideLoading();
         window.location.reload();
-
-        console.log(response);
 
     } catch (error) {
         console.error('เกิดข้อผิดพลาด:', error);
@@ -198,8 +230,7 @@ async function deleteDoc(status_doc,id) {
             body: JSON.stringify(data_sent)
         });
         window.hideLoading();
-        const result = await response.json(); 
-        console.log(result);
+        await response.json();
 
         Swal.fire({
             title: "ดำเนินการสำเร็จ",
@@ -261,10 +292,6 @@ function convertToBuddhistEra(dateString) {
     return `${day}-${month}-${year}`;
 }
 
-// โหลดข้อมูลครั้งแรก
-document.addEventListener("DOMContentLoaded", function () {
-    fetchData(1);
-});
 // เพิ่ม Event ให้ปุ่มกด
 document.getElementById('searchBtn').addEventListener('click', function () {
     fetchData(1); // เรียก API และดึงข้อมูลใหม่

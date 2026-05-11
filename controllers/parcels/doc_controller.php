@@ -42,7 +42,9 @@ class DocController
                 } elseif ($_GET['action'] == 'doc_search') {
                     $this->readAll($_GET['doc_type'], $_GET['limit'], $_GET['offset'], $_GET['doc_number'], $_GET['start_date'], $_GET['end_date'], $_GET['status_doc']);
                 } elseif ($_GET['action'] == 'doc_search_list') {
-                    $this->readAllSearchlist($_GET['doc_type'], $_GET['limit'], $_GET['offset'], $_GET['plan_number'], $_GET['start_date'], $_GET['end_date'], $_GET['status_plan']);
+                    $doc_number = isset($_GET['doc_number']) ? $_GET['doc_number'] : '';
+                    $status_doc = isset($_GET['status_doc']) ? $_GET['status_doc'] : '';
+                    $this->readAllSearchlist($_GET['doc_type'], $_GET['limit'], $_GET['offset'], $doc_number, $_GET['start_date'], $_GET['end_date'], $status_doc);
                 } elseif ($_GET['action'] == 'doc_one') {
                     $this->readDocOne($_GET['id']);
                 }
