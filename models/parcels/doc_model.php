@@ -251,6 +251,45 @@ class DocModel
         $doc_type = isset($data['tb_docs']['doc_type']) ? $data['tb_docs']['doc_type'] : 'master';
         $plan_id = isset($data['tb_docs']['plan_id']) ? $data['tb_docs']['plan_id'] : null;
 
+        $plan_id_int = filter_var($plan_id, FILTER_VALIDATE_INT);
+        if ($plan_id_int !== false && $plan_id_int > 0) {
+            $resPlan = pg_query_params(
+                $this->conn,
+                'SELECT plan_requ_level, branch_type FROM parcels.tb_plans WHERE id = $1',
+                [$plan_id_int]
+            );
+            if ($resPlan && ($planRow = pg_fetch_assoc($resPlan))) {
+                if (!empty($planRow['plan_requ_level'])) {
+                    $doc_requ_level = $planRow['plan_requ_level'];
+                }
+                if (!empty($planRow['branch_type'])) {
+                    $branch_type = $planRow['branch_type'];
+                }
+            }
+        }
+
+        // สอดคล้องกับ plan_model: ระดับที่ไม่มีขั้นล่างให้อนุมัติ ตั้งเป็น approve อัตโนมัติ
+        $status_branch = 'pending';
+        $status_province = 'pending';
+        $status_area = 'pending';
+        switch ($doc_requ_level) {
+            case 'จังหวัด':
+            case 'province':
+                $status_branch = 'approve';
+                break;
+            case 'เขต':
+            case 'area':
+                $status_branch = 'approve';
+                $status_province = 'approve';
+                break;
+            case 'กยท':
+            case 'head_office':
+                $status_branch = 'approve';
+                $status_province = 'approve';
+                $status_area = 'approve';
+                break;
+        }
+
         // สร้างคำสั่ง SQL INSERT พร้อม RETURNING
         $query = "INSERT INTO parcels.tb_docs (
         doc_number,
@@ -288,9 +327,12 @@ class DocModel
         at_close,
         const_id,
         doc_type,
-        plan_id
+        plan_id,
+        status_branch,
+        status_province,
+        status_area
     ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
     ) RETURNING id";
 
         // ใช้ pg_query_params เพื่อเตรียมคำสั่ง SQL และส่งข้อมูล
@@ -330,7 +372,10 @@ class DocModel
             $at_close === null ? 'NULL' : ($at_close ? 'TRUE' : 'FALSE'),
             $const_id === null ? 'NULL' : ($const_id ? 'TRUE' : 'FALSE'),
             $doc_type,
-            $plan_id
+            $plan_id,
+            $status_branch,
+            $status_province,
+            $status_area
         ));
 
         // ตรวจสอบผลลัพธ์ของการทำงาน
