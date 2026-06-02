@@ -84,12 +84,17 @@ class AuthenController
 
     public function loginUser($data)
     {
+        if (empty($data['user_code']) || empty($data['user_pass'])) {
+            echo json_encode(['status' => 'error', 'message' => 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'data' => ['id' => null]]);
+            return;
+        }
+
         $result = $this->authenModel->loginUser(
             $data['user_code'],
             $data['user_pass']
         );
 
-        if ($result) {
+        if ($result && isset($result['id'])) {
 
 
 
@@ -275,7 +280,8 @@ class AuthenController
 
             echo json_encode(['status' => 'success', 'data' => $res]);
         } else {
-            echo json_encode(['status' => 'Error creating user']);
+            $message = is_array($result) ? ($result['message'] ?? 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+            echo json_encode(['status' => 'error', 'message' => $message, 'data' => ['id' => null]]);
         }
     }
 }

@@ -58,17 +58,43 @@ function earningsReport() {
 /* Earnings Report Chart */
 
 /* Payouts Chart */
-var element = document.getElementById("course-payouts");
-if (element !== null) {
-    element.innerHTML = "";
+var payoutsChartElement = document.getElementById("course-payouts");
+var chart2 = null;
+var payoutsCategories = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+var payoutsMonthLabels = [];
+
+if (payoutsChartElement !== null) {
+    payoutsChartElement.innerHTML = "";
+
+    var payoutsMockPaid = [55, 55, 42, 42, 55, 55, 38, 38, 53, 53, 35, 35];
+    var payoutsMockUnpaid = [35, 35, 46, 46, 35, 35, 48, 48, 33, 33, 38, 38];
+    var dashboardChartData = window.__DASHBOARD_CHART__ || null;
+
+    if (dashboardChartData) {
+        if (Array.isArray(dashboardChartData.approved) && dashboardChartData.approved.length === 12) {
+            payoutsMockPaid = dashboardChartData.approved;
+        }
+        if (Array.isArray(dashboardChartData.pending) && dashboardChartData.pending.length === 12) {
+            payoutsMockUnpaid = dashboardChartData.pending;
+        }
+        if (Array.isArray(dashboardChartData.labels) && dashboardChartData.labels.length === 12) {
+            payoutsCategories = dashboardChartData.labels;
+        }
+        if (Array.isArray(dashboardChartData.month_labels)) {
+            payoutsMonthLabels = dashboardChartData.month_labels;
+        }
+    }
+
+    var payoutsColors = ["rgb(132, 90, 223)", "rgba(230, 83, 60, 0.5)"];
+
     var options2 = {
         series: [{
             name: 'Paid',
-            data: [55, 55, 42, 42, 55, 55, 38, 38, 53, 53, 35, 35],
+            data: payoutsMockPaid,
             type: 'line',
         }, {
             name: 'UnPaid',
-            data: [35, 35, 46, 46, 35, 35, 48, 48, 33, 33, 38, 38],
+            data: payoutsMockUnpaid,
             type: "line",
         }],
         chart: {
@@ -82,7 +108,7 @@ if (element !== null) {
         grid: {
             borderColor: '#f2f6f7',
         },
-        colors: ["rgb(132, 90, 223)", "rgba(230, 83, 60,0.5)"],
+        colors: payoutsColors,
         background: 'transparent',
         dataLabels: {
             enabled: false
@@ -92,19 +118,13 @@ if (element !== null) {
             width: 2,
             dashArray: [0, 5],
         },
-        xaxis: {
-            type: 'month',
-            categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        },
-        dataLabels: {
-            enabled: false,
-        },
         legend: {
             show: true,
             position: 'top',
         },
         xaxis: {
             show: false,
+            categories: payoutsCategories,
             axisBorder: {
                 show: false,
                 color: 'rgba(119, 119, 142, 0.05)',
@@ -133,18 +153,67 @@ if (element !== null) {
             }
         },
         tooltip: {
+            shared: true,
+            intersect: false,
             x: {
-                format: 'dd/MM/yy HH:mm'
+                formatter: function (value, opts) {
+                    var index = opts && typeof opts.dataPointIndex === 'number' ? opts.dataPointIndex : 0;
+                    if (payoutsMonthLabels[index]) {
+                        return payoutsMonthLabels[index];
+                    }
+                    return value;
+                },
+            },
+            y: {
+                formatter: function (value) {
+                    return Math.round(value) + ' รายการ';
+                },
             },
         },
     };
-    var chart2 = new ApexCharts(document.querySelector("#course-payouts"), options2);
+
+    chart2 = new ApexCharts(payoutsChartElement, options2);
     chart2.render();
+    window.dashboardPayoutsChart = chart2;
+    window.dashboardPayoutsMonthLabels = payoutsMonthLabels;
 }
 
 function coursePayouts() {
+    if (!chart2) {
+        return;
+    }
+
     chart2.updateOptions({
-        colors: ["rgb(" + myVarVal + ")", "rgba(230, 83, 60,0.5)"],
-    })
+        colors: ["rgb(" + myVarVal + ")", "rgba(230, 83, 60, 0.5)"],
+    });
 }
+
+window.updateDashboardPayoutsChart = function updateDashboardPayoutsChart(chartData) {
+    if (!chart2 || !chartData) {
+        return;
+    }
+
+    if (Array.isArray(chartData.month_labels)) {
+        window.dashboardPayoutsMonthLabels = payoutsMonthLabels = chartData.month_labels;
+    }
+
+    chart2.updateOptions({
+        xaxis: {
+            categories: Array.isArray(chartData.labels) && chartData.labels.length === 12
+                ? chartData.labels
+                : payoutsCategories,
+        },
+    });
+
+    chart2.updateSeries([
+        {
+            name: 'Paid',
+            data: chartData.approved || [],
+        },
+        {
+            name: 'UnPaid',
+            data: chartData.pending || [],
+        },
+    ]);
+};
 /* Payouts Chart */
