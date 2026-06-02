@@ -3262,7 +3262,12 @@ async function checkBudget(proposalData) {
         body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
+    let result;
+    try {
+        result = await response.json();
+    } catch (parseError) {
+        throw new Error(`ไม่สามารถอ่านผลตอบกลับจากระบบได้ (HTTP ${response.status})`);
+    }
 
     console.group('[Budget Check] ได้ response กลับมา');
     console.log('HTTP Status:', response.status, response.statusText);
@@ -3274,6 +3279,9 @@ async function checkBudget(proposalData) {
         console.log('SAP Params (resolve code แล้ว):', result.debug.sap_params);
         if (result.debug.sap_url) {
             console.log('SAP URL:', result.debug.sap_url);
+        }
+        if (result.debug.sap_method) {
+            console.log('SAP Method:', result.debug.sap_method);
         }
         if (result.debug.http_code !== undefined) {
             console.log('SAP HTTP Code:', result.debug.http_code);
@@ -3291,8 +3299,12 @@ async function checkBudget(proposalData) {
     }
     console.groupEnd();
 
-    if (!response.ok && result.status !== 'success') {
-        throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    if (result && (result.status === 'success' || result.status === 'error')) {
+        return result;
+    }
+
+    if (!response.ok) {
+        throw new Error(result?.message || `HTTP error! status: ${response.status}`);
     }
 
     return result;

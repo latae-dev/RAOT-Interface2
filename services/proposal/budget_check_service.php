@@ -38,7 +38,6 @@ class BudgetCheckService
         try {
             $sapResponse = $this->sapClient->fetchRemainingBudget($sapParams);
         } catch (RuntimeException $e) {
-            error_log('BudgetCheckService::checkBudget - ' . $e->getMessage());
             return $this->withDebug([
                 'status' => 'error',
                 'message' => 'ไม่สามารถเชื่อมต่อ SAP ได้: ' . $e->getMessage(),

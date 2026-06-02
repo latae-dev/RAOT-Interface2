@@ -6,6 +6,7 @@ loadEnvFile(dirname(__DIR__) . '/.env');
 
 return [
     'url' => getenv('SAP_BUDGET_URL') ?: 'https://saps4hanadev.raot.co.th:8443/sap/bc/zremaining',
+    'http_method' => strtoupper(getenv('SAP_BUDGET_HTTP_METHOD') ?: 'POST'),
     'user' => getenv('SAP_BUDGET_USER') ?: '',
     'pass' => getenv('SAP_BUDGET_PASS') ?: '',
     'rfikrs' => getenv('SAP_BUDGET_FMIKRS') ?: '1000',

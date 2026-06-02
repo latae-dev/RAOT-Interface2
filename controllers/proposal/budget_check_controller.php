@@ -70,5 +70,14 @@ class BudgetCheckController
     }
 }
 
-$controller = new BudgetCheckController();
-$controller->processRequest();
+try {
+    $controller = new BudgetCheckController();
+    $controller->processRequest();
+} catch (Throwable $e) {
+    error_log('BudgetCheckController bootstrap: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Internal server error',
+    ], JSON_UNESCAPED_UNICODE);
+}
