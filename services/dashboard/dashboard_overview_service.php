@@ -24,6 +24,7 @@ class DashboardOverviewService
             'user_stats' => $userStats,
             'top_users' => $this->userStatsService->getTopFrequentUsers(5),
             'monthly_documents' => $this->documentRepository->getMonthlyDocumentTrends(),
+            'module_counts' => $this->documentRepository->getModuleDocumentCounts(),
         ];
     }
 }

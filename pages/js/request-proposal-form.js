@@ -243,17 +243,38 @@ function getDepartmentCode() {
 /**
  * แสดงข้อความผิดพลาด
  */
-function showErrorMessage(message) {
+function showErrorMessage(title, message) {
+    const errorTitle = message ? title : 'เกิดข้อผิดพลาด';
+    const errorText = message || title;
+
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             icon: 'error',
-            title: 'เกิดข้อผิดพลาด',
-            text: message,
+            title: errorTitle,
+            text: errorText,
             confirmButtonText: 'ตกลง'
         });
     } else {
-        alert(message);
+        alert(errorTitle + (errorText ? '\n' + errorText : ''));
     }
+}
+
+/**
+ * จัดรูปแบบตัวเลขเป็นเงิน
+ */
+function formatCurrency(amount) {
+    const value = parseFloat(amount) || 0;
+    return value.toLocaleString('th-TH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+/**
+ * ดึง base path ของ API
+ */
+function getApiBasePath() {
+    return window.location.origin + window.location.pathname.replace(/\/pages\/.*/, '');
 }
 
 // Export functions สำหรับใช้ในไฟล์อื่น
@@ -3159,29 +3180,183 @@ function setupSaveButtons() {
  */
 async function saveProposal() {
     try {
-        // ตรวจสอบข้อมูลที่จำเป็น
         if (!validateRequiredFields()) {
             return;
         }
-        
-        // แสดง loading
-        showLoadingMessage('กำลังบันทึกข้อมูล...');
-        
-        // รวบรวมข้อมูล
+
         const proposalData = collectProposalData();
-        
-        // ส่งข้อมูลไปยัง API
+
+        showLoadingMessage('กำลังตรวจสอบงบประมาณ...');
+        const budgetResult = await checkBudget(proposalData);
+
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+
+        if (budgetResult.status === 'error') {
+            showErrorMessage('ไม่สามารถตรวจสอบงบประมาณได้', budgetResult.message);
+            return;
+        }
+
+        const budgetData = budgetResult.data || {};
+
+        if (!budgetData.is_sufficient) {
+            showInsufficientBudgetModal(budgetData);
+            return;
+        }
+
+        const confirmed = await showBudgetConfirmModal(budgetData);
+        if (!confirmed) {
+            return;
+        }
+
+        showLoadingMessage('กำลังบันทึกข้อมูล...');
         const result = await submitProposal(proposalData);
-        
+
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+
         if (result.success) {
             showSuccessMessage('บันทึกข้อมูลสำเร็จ', `หมายเลขคำขอ: ${result.proposal_number}`);
         } else {
             showErrorMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล', result.message);
         }
-        
     } catch (error) {
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
         showErrorMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล', error.message);
     }
+}
+
+/**
+ * เรียก API ตรวจสอบงบประมาณ
+ */
+async function checkBudget(proposalData) {
+    const apiUrl = getApiBasePath() + '/controllers/proposal/budget_check_controller.php?action=check';
+
+    const payload = {
+        start_date: proposalData.start_date,
+        end_date: proposalData.end_date,
+        cost_center_id: proposalData.cost_center_id || '',
+        funds_center_id: proposalData.funds_center_id || '',
+        liability_id: proposalData.liability_id || '',
+        fund_id: proposalData.fund_id || '',
+        scope_id: proposalData.scope_id || '',
+        total_amount: proposalData.total_amount || 0
+    };
+
+    console.group('[Budget Check] ส่ง request');
+    console.log('URL:', apiUrl);
+    console.log('Payload → Backend:', JSON.parse(JSON.stringify(payload)));
+    console.log('Proposal Data (full):', JSON.parse(JSON.stringify(proposalData)));
+    console.groupEnd();
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    console.group('[Budget Check] ได้ response กลับมา');
+    console.log('HTTP Status:', response.status, response.statusText);
+    console.log('Result ← Backend:', JSON.parse(JSON.stringify(result)));
+
+    if (result.debug) {
+        console.group('Debug (Backend → SAP)');
+        console.log('Frontend Payload:', result.debug.frontend_payload);
+        console.log('SAP Params (resolve code แล้ว):', result.debug.sap_params);
+        if (result.debug.sap_url) {
+            console.log('SAP URL:', result.debug.sap_url);
+        }
+        if (result.debug.http_code !== undefined) {
+            console.log('SAP HTTP Code:', result.debug.http_code);
+        }
+        if (result.debug.from_cache !== undefined) {
+            console.log('From Cache:', result.debug.from_cache);
+        }
+        if (result.debug.raw_response) {
+            console.log('SAP Raw Response:', result.debug.raw_response);
+        }
+        if (result.debug.sap_normalized) {
+            console.log('SAP Normalized:', result.debug.sap_normalized);
+        }
+        console.groupEnd();
+    }
+    console.groupEnd();
+
+    if (!response.ok && result.status !== 'success') {
+        throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+}
+
+/**
+ * Modal ยืนยันเมื่องบเพียงพอ
+ */
+function showBudgetConfirmModal(budgetData) {
+    const balance = formatCurrency(budgetData.balance);
+    const totalAmount = formatCurrency(budgetData.total_amount);
+    const remaining = formatCurrency(budgetData.remaining_after_deduct);
+
+    const html = `
+        <div class="text-start">
+            <p class="mb-2">งบคงเหลือปัจจุบัน: <strong>${balance}</strong> บาท</p>
+            <p class="mb-2">ยอดใบขอเสนอ: <strong>${totalAmount}</strong> บาท</p>
+            <p class="mb-0">งบหักลบ: <strong>${remaining}</strong> บาท</p>
+        </div>
+    `;
+
+    if (typeof Swal === 'undefined') {
+        return Promise.resolve(window.confirm('งบเพียงพอ ต้องการขออนุมัติหรือไม่?'));
+    }
+
+    return Swal.fire({
+        icon: 'info',
+        title: 'ตรวจสอบงบประมาณ',
+        html: html,
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันขออนุมัติ',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: true
+    }).then((result) => result.isConfirmed);
+}
+
+/**
+ * Modal เมื่องบไม่เพียงพอ
+ */
+function showInsufficientBudgetModal(budgetData) {
+    const balance = formatCurrency(budgetData.balance);
+    const totalAmount = formatCurrency(budgetData.total_amount);
+    const overAmount = formatCurrency(budgetData.over_amount || (budgetData.total_amount - budgetData.balance));
+
+    const html = `
+        <div class="text-start">
+            <p class="mb-2">งบคงเหลือไม่เพียงพอสำหรับการขออนุมัติ</p>
+            <p class="mb-2">งบคงเหลือ: <strong>${balance}</strong> บาท</p>
+            <p class="mb-2">ยอดใบขอเสนอ: <strong>${totalAmount}</strong> บาท</p>
+            <p class="mb-0">เกินงบ: <strong>${overAmount}</strong> บาท</p>
+        </div>
+    `;
+
+    if (typeof Swal === 'undefined') {
+        alert('งบคงเหลือไม่เพียงพอ');
+        return;
+    }
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'ไม่สามารถขออนุมัติได้',
+        html: html,
+        confirmButtonText: 'ตกลง'
+    });
 }
 
 /**
@@ -3636,8 +3811,7 @@ function collectTableItems(section) {
  * ส่งข้อมูลไปยัง API
  */
 async function submitProposal(data) {
-    const basePath = window.location.origin + window.location.pathname.replace(/\/pages\/.*/, '');
-    const apiUrl = basePath + '/controllers/proposal/request_proposal_controller.php?action=create';
+    const apiUrl = getApiBasePath() + '/controllers/proposal/request_proposal_controller.php?action=create';
     
     const response = await fetch(apiUrl, {
         method: 'POST',

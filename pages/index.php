@@ -17,6 +17,13 @@ $dashboardStats = [
     'online_timeout_minutes' => $dashboardConfig['online_timeout_minutes'],
 ];
 $dashboardTopUsers = [];
+$dashboardModuleCounts = [
+    'parcels' => 0,
+    'withdraw_money' => 0,
+    'business_budget' => 0,
+    'investment_budget' => 0,
+    'request_proposal' => 0,
+];
 $dashboardMonthlyDocuments = [
     'labels' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
     'month_labels' => [],
@@ -45,6 +52,7 @@ try {
         $dashboardStats = $dashboardOverview['user_stats'];
         $dashboardTopUsers = $dashboardOverview['top_users'];
         $dashboardMonthlyDocuments = $dashboardOverview['monthly_documents'];
+        $dashboardModuleCounts = $dashboardOverview['module_counts'] ?? $dashboardModuleCounts;
     }
 } catch (Throwable $e) {
     error_log('index.php dashboard stats error: ' . $e->getMessage());
@@ -57,6 +65,11 @@ if (ob_get_length()) {
 function formatDashboardUserCount(int $count): string
 {
     return number_format($count) . ' User';
+}
+
+function formatDashboardDocCount(int $count): string
+{
+    return number_format($count) . ' Doc';
 }
 
 function escDashboard($text): string
@@ -129,21 +142,21 @@ function dashboardUserInitials(array $user): string
                                     <a href="<?php echo $baseUrl; ?>/pages/parcel-withdrawal-list.php" class="category-link success text-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="category-svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" id="swatchbook"><path opacity="0.2" d="M9 22H5a3.003 3.003 0 0 1-3-3V5a3.003 3.003 0 0 1 3-3h4a3.003 3.003 0 0 1 3 3v14a3.003 3.003 0 0 1-3 3z"></path><path opacity="0.4" d="m20.293 6.535-2.828-2.828a3.004 3.004 0 0 0-4.243 0l-1.229 1.228c0 .022.007.043.007.065v14c0 .027-.007.052-.008.08l8.301-8.302a3.004 3.004 0 0 0 0-4.243z"></path><circle cx="7" cy="17" r="1" opacity="1"></circle><path opacity="1" d="m19.065 12.007-7.073 7.072c0-.027.008-.052.008-.079a3.003 3.003 0 0 1-3 3h10a3.003 3.003 0 0 0 3-3v-4a3 3 0 0 0-2.935-2.993z"></path></svg>
                                         <p class="fs-14 mb-1 text-default fw-semibold">ระบบบริหารจัดการข้อมูลพัสดุ</p>
-                                        <span class="fs-11 text-muted">100 Doc</span>
+                                        <span class="fs-11 text-muted" id="dashboard-module-parcels"><?php echo formatDashboardDocCount((int) $dashboardModuleCounts['parcels']); ?></span>
                                     </a>
                                 </div>
                                 <div class="mb-4 col-xxl-4 col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <a href="<?php echo $baseUrl; ?>/parcel/pages/withdraw-money-list.php" class="category-link secondary text-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="category-svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" id="swatchbook"><path opacity="0.2" d="M9 22H5a3.003 3.003 0 0 1-3-3V5a3.003 3.003 0 0 1 3-3h4a3.003 3.003 0 0 1 3 3v14a3.003 3.003 0 0 1-3 3z"></path><path opacity="0.4" d="m20.293 6.535-2.828-2.828a3.004 3.004 0 0 0-4.243 0l-1.229 1.228c0 .022.007.043.007.065v14c0 .027-.007.052-.008.08l8.301-8.302a3.004 3.004 0 0 0 0-4.243z"></path><circle cx="7" cy="17" r="1" opacity="1"></circle><path opacity="1" d="m19.065 12.007-7.073 7.072c0-.027.008-.052.008-.079a3.003 3.003 0 0 1-3 3h10a3.003 3.003 0 0 0 3-3v-4a3 3 0 0 0-2.935-2.993z"></path></svg>
                                         <p class="fs-14 mb-1 text-default fw-semibold">ระบบเงินทดรองและเบิกจ่าย</p>
-                                        <span class="fs-11 text-muted">300 Doc</span>
+                                        <span class="fs-11 text-muted" id="dashboard-module-withdraw-money"><?php echo formatDashboardDocCount((int) $dashboardModuleCounts['withdraw_money']); ?></span>
                                     </a>
                                 </div>
                                 <div class="mb-4 col-xxl-4 col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <a href="<?php echo $baseUrl; ?>/pages/business-budget-list.php" class="category-link warning text-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="category-svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" id="swatchbook"><path opacity="0.2" d="M9 22H5a3.003 3.003 0 0 1-3-3V5a3.003 3.003 0 0 1 3-3h4a3.003 3.003 0 0 1 3 3v14a3.003 3.003 0 0 1-3 3z"></path><path opacity="0.4" d="m20.293 6.535-2.828-2.828a3.004 3.004 0 0 0-4.243 0l-1.229 1.228c0 .022.007.043.007.065v14c0 .027-.007.052-.008.08l8.301-8.302a3.004 3.004 0 0 0 0-4.243z"></path><circle cx="7" cy="17" r="1" opacity="1"></circle><path opacity="1" d="m19.065 12.007-7.073 7.072c0-.027.008-.052.008-.079a3.003 3.003 0 0 1-3 3h10a3.003 3.003 0 0 0 3-3v-4a3 3 0 0 0-2.935-2.993z"></path></svg>
                                         <p class="fs-14 mb-1 text-default fw-semibold">ระบบคำของบประมาณรายจ่ายประจำปี</p>
-                                        <span class="fs-11 text-muted">200 Doc</span>
+                                        <span class="fs-11 text-muted" id="dashboard-module-business-budget"><?php echo formatDashboardDocCount((int) $dashboardModuleCounts['business_budget']); ?></span>
                                     </a>
                                 </div>
 
@@ -151,14 +164,14 @@ function dashboardUserInitials(array $user): string
                                     <a href="<?php echo $baseUrl; ?>/pages/investment-budget-list.php" class="category-link primary text-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="category-svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" id="swatchbook"><path opacity="0.2" d="M9 22H5a3.003 3.003 0 0 1-3-3V5a3.003 3.003 0 0 1 3-3h4a3.003 3.003 0 0 1 3 3v14a3.003 3.003 0 0 1-3 3z"></path><path opacity="0.4" d="m20.293 6.535-2.828-2.828a3.004 3.004 0 0 0-4.243 0l-1.229 1.228c0 .022.007.043.007.065v14c0 .027-.007.052-.008.08l8.301-8.302a3.004 3.004 0 0 0 0-4.243z"></path><circle cx="7" cy="17" r="1" opacity="1"></circle><path opacity="1" d="m19.065 12.007-7.073 7.072c0-.027.008-.052.008-.079a3.003 3.003 0 0 1-3 3h10a3.003 3.003 0 0 0 3-3v-4a3 3 0 0 0-2.935-2.993z"></path></svg>
                                         <p class="fs-14 mb-1 text-default fw-semibold">ระบบคำขอตั้งงบลงทุน</p>
-                                        <span class="fs-11 text-muted">100 Doc</span>
+                                        <span class="fs-11 text-muted" id="dashboard-module-investment-budget"><?php echo formatDashboardDocCount((int) $dashboardModuleCounts['investment_budget']); ?></span>
                                     </a>
                                 </div>
                                 <div class="mb-4 col-xxl-6 col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <a href="<?php echo $baseUrl; ?>/pages/request-proposal-list.php" class="category-link danger text-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="category-svg" enable-background="new 0 0 24 24" viewBox="0 0 24 24" id="swatchbook"><path opacity="0.2" d="M9 22H5a3.003 3.003 0 0 1-3-3V5a3.003 3.003 0 0 1 3-3h4a3.003 3.003 0 0 1 3 3v14a3.003 3.003 0 0 1-3 3z"></path><path opacity="0.4" d="m20.293 6.535-2.828-2.828a3.004 3.004 0 0 0-4.243 0l-1.229 1.228c0 .022.007.043.007.065v14c0 .027-.007.052-.008.08l8.301-8.302a3.004 3.004 0 0 0 0-4.243z"></path><circle cx="7" cy="17" r="1" opacity="1"></circle><path opacity="1" d="m19.065 12.007-7.073 7.072c0-.027.008-.052.008-.079a3.003 3.003 0 0 1-3 3h10a3.003 3.003 0 0 0 3-3v-4a3 3 0 0 0-2.935-2.993z"></path></svg>
                                         <p class="fs-14 mb-1 text-default fw-semibold">ระบบใบขอเสนอซื้อ PR Onlibe</p>
-                                        <span class="fs-11 text-muted">300 Doc</span>
+                                        <span class="fs-11 text-muted" id="dashboard-module-request-proposal"><?php echo formatDashboardDocCount((int) $dashboardModuleCounts['request_proposal']); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -238,97 +251,29 @@ function dashboardUserInitials(array $user): string
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header">
+                <div class="card-header justify-content-between">
                     <div class="card-title">
                         รายงานงบประมาณประจำปี
                     </div>
+                    <div class="text-muted fs-12" id="annual-budget-year-label">ปี <?php echo (int) date('Y') + 543; ?> (<?php echo (int) date('Y'); ?>)</div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="datatable-basic" class="table table-bordered text-nowrap w-100">
+                        <table id="annual-budget-table" class="table table-bordered text-nowrap w-100">
                             <thead>
                                 <tr>
                                     <th>ปีงบประมาณ</th>
                                     <th>รหัส - ชื่อศูนย์เงินทุน</th>
                                     <th>รหัส - ชื่อเงินทุน</th>
                                     <th>รหัส - ชื่อขอบเขตหน้าที่</th>
-                                    <th>รหัส - ชื่อรายการภาระผู้พันธ์</th>
-                                    <th>งบประมาณที่จัดสรร (บาท)</th>
-                                    <th>งบประมาณคงเหลือ (บาท)</th>
+                                    <th>รหัส - ชื่อรายการภาระผูกพัน</th>
+                                    <th class="text-end">งบประมาณที่จัดสรร (บาท)</th>
+                                    <th class="text-end">งบประมาณคงเหลือ (บาท)</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="annual-budget-body">
                                 <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
-                                </tr>
-                                <tr>
-                                    <td>2569</td>
-                                    <td>60501 - กยท.ส.ท่าแซะ</td>
-                                    <td>G1130 - งบทำการ มาตรา 13</td>
-                                    <td>10001001 - กิจกรรมงบบริหารทั่วไป</td>
-                                    <td>1151100000 - วัตถุดิบคงเหลือ</td>
-                                    <td>1,000,000.00</td>
-                                    <td>900,000.00</td>
+                                    <td colspan="7" class="text-center text-muted py-4">กำลังโหลดข้อมูลงบประมาณ...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -421,7 +366,7 @@ function dashboardUserInitials(array $user): string
 <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
-<script src="<?php echo $baseUrl; ?>/pages/js/index-datatables.js"></script>
+<script src="<?php echo $baseUrl; ?>/pages/js/index-annual-budget.js?v=<?php echo filemtime(__DIR__ . '/js/index-annual-budget.js'); ?>"></script>
 <!-- This code use for render base file -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {

@@ -96,4 +96,48 @@ class DashboardDocumentRepository
             'pending' => $pending,
         ];
     }
+
+    /**
+     * จำนวนรายการที่สร้างทั้งหมดในแต่ละระบบ (ไม่รวมรายการที่ถูกลบ)
+     *
+     * @return array{parcels: int, withdraw_money: int, business_budget: int, investment_budget: int, request_proposal: int}
+     */
+    public function getModuleDocumentCounts(): array
+    {
+        $defaults = [
+            'parcels' => 0,
+            'withdraw_money' => 0,
+            'business_budget' => 0,
+            'investment_budget' => 0,
+            'request_proposal' => 0,
+        ];
+
+        $query = "SELECT
+                    (SELECT COUNT(*)::integer FROM parcels.tb_plans
+                     WHERE doc_type = 'master' AND status_plan != 'delete') AS parcels,
+                    (SELECT COUNT(*)::integer FROM withdraws.tb_wrd_plans
+                     WHERE status_plan != 'delete') AS withdraw_money,
+                    (SELECT COUNT(*)::integer FROM " . BUDGETS_TB_BUSINESS_BUDGETS . "
+                     WHERE deleted_at IS NULL) AS business_budget,
+                    (SELECT COUNT(*)::integer FROM investment_budget.tb_ib_requests
+                     WHERE is_deleted = FALSE) AS investment_budget,
+                    (SELECT COUNT(*)::integer FROM \"request-proposal\".request_proposals
+                     WHERE is_deleted = FALSE) AS request_proposal";
+
+        $result = @pg_query($this->conn, $query);
+        if (!$result) {
+            return $defaults;
+        }
+
+        $row = pg_fetch_assoc($result);
+        if (!$row) {
+            return $defaults;
+        }
+
+        foreach ($defaults as $key => $value) {
+            $defaults[$key] = (int) ($row[$key] ?? 0);
+        }
+
+        return $defaults;
+    }
 }

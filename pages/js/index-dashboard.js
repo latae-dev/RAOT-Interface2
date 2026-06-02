@@ -5,11 +5,33 @@
         return Number(count || 0).toLocaleString('th-TH') + ' User';
     }
 
-    function updateStatElement(id, count) {
+    function formatDocCount(count) {
+        return Number(count || 0).toLocaleString('th-TH') + ' Doc';
+    }
+
+    function updateStatElement(id, count, formatter) {
         const element = document.getElementById(id);
         if (element) {
-            element.textContent = formatUserCount(count);
+            element.textContent = formatter(count);
         }
+    }
+
+    function updateModuleCounts(counts) {
+        if (!counts || typeof counts !== 'object') {
+            return;
+        }
+
+        const mapping = {
+            parcels: 'dashboard-module-parcels',
+            withdraw_money: 'dashboard-module-withdraw-money',
+            business_budget: 'dashboard-module-business-budget',
+            investment_budget: 'dashboard-module-investment-budget',
+            request_proposal: 'dashboard-module-request-proposal',
+        };
+
+        Object.keys(mapping).forEach(function (key) {
+            updateStatElement(mapping[key], counts[key], formatDocCount);
+        });
     }
 
     function escapeHtml(text) {
@@ -103,9 +125,10 @@
             }
 
             const stats = result.data.user_stats || {};
-            updateStatElement('dashboard-online-users', stats.online_users);
-            updateStatElement('dashboard-total-users', stats.total_users);
-            updateStatElement('dashboard-admin-users', stats.admin_users);
+            updateStatElement('dashboard-online-users', stats.online_users, formatUserCount);
+            updateStatElement('dashboard-total-users', stats.total_users, formatUserCount);
+            updateStatElement('dashboard-admin-users', stats.admin_users, formatUserCount);
+            updateModuleCounts(result.data.module_counts);
             renderTopUsers(result.data.top_users || []);
             updatePayoutsChart(result.data.monthly_documents || window.__DASHBOARD_CHART__);
         } catch (error) {
