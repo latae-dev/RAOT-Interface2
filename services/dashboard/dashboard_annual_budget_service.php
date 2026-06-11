@@ -18,7 +18,7 @@ class DashboardAnnualBudgetService
      */
     public function getAnnualBudgetReport(?int $year = null): array
     {
-        $year = $year ?? (int) date('Y');
+        $year = $year ?? $this->getCurrentFiscalYear();
 
         if ($year < 2000 || $year > 2100) {
             return [
@@ -27,11 +27,12 @@ class DashboardAnnualBudgetService
             ];
         }
 
+        $dateRange = $this->buildFiscalYearDateRange($year);
         $sapParams = [
             'gjahr' => (string) $year,
             'rfikrs' => (string) ($this->config['rfikrs'] ?? '1000'),
-            'str_date' => '20251001',
-            'end_date' => '20260930',
+            'str_date' => $dateRange['str_date'],
+            'end_date' => $dateRange['end_date'],
         ];
 
         try {
@@ -130,5 +131,27 @@ class DashboardAnnualBudgetService
         }
 
         return 0.0;
+    }
+
+    /**
+     * ปีงบประมาณไทย (1 ต.ค. - 30 ก.ย.) ใช้ปี ค.ศ. ที่สิ้นสุดในเดือนกันยายน
+     */
+    public function getCurrentFiscalYear(): int
+    {
+        $calendarYear = (int) date('Y');
+        $month = (int) date('n');
+
+        return $month >= 10 ? $calendarYear + 1 : $calendarYear;
+    }
+
+    /**
+     * @return array{str_date:string,end_date:string}
+     */
+    public function buildFiscalYearDateRange(int $fiscalYear): array
+    {
+        return [
+            'str_date' => ($fiscalYear - 1) . '1001',
+            'end_date' => $fiscalYear . '0930',
+        ];
     }
 }

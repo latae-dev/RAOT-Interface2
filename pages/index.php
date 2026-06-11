@@ -97,6 +97,16 @@ function dashboardUserInitials(array $user): string
 
     return mb_strtoupper(mb_substr($code, 0, 2));
 }
+
+function getCurrentFiscalYear(): int
+{
+    $calendarYear = (int) date('Y');
+    $month = (int) date('n');
+
+    return $month >= 10 ? $calendarYear + 1 : $calendarYear;
+}
+
+$currentFiscalYear = getCurrentFiscalYear();
 ?>
 <!-- This code generates the base URL for the website by combining the protocol, domain name, and directory path -->
 
@@ -255,7 +265,16 @@ function dashboardUserInitials(array $user): string
                     <div class="card-title">
                         รายงานงบประมาณประจำปี
                     </div>
-                    <div class="text-muted fs-12" id="annual-budget-year-label">ปี <?php echo (int) date('Y') + 543; ?> (<?php echo (int) date('Y'); ?>)</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <select id="annual-budget-year-select" class="form-select form-select-sm" style="width: auto;">
+                            <?php for ($fy = $currentFiscalYear - 1; $fy <= $currentFiscalYear + 2; $fy++): ?>
+                            <option value="<?php echo (int) $fy; ?>"<?php echo $fy === $currentFiscalYear ? ' selected' : ''; ?>>
+                                ปี <?php echo (int) $fy + 543; ?> (<?php echo (int) $fy; ?>)
+                            </option>
+                            <?php endfor; ?>
+                        </select>
+                        <div class="text-muted fs-12" id="annual-budget-year-label"></div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

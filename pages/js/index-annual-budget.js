@@ -79,13 +79,42 @@
         });
     }
 
-    function updateYearLabel(year) {
+    function formatSapDateDisplay(value) {
+        if (!value || String(value).length !== 8) {
+            return '';
+        }
+
+        const raw = String(value);
+        const year = raw.slice(0, 4);
+        const month = raw.slice(4, 6);
+        const day = raw.slice(6, 8);
+
+        return day + '/' + month + '/' + year;
+    }
+
+    function updateYearLabel(year, sapParams) {
         const label = document.getElementById('annual-budget-year-label');
         if (!label || !year) {
             return;
         }
 
-        label.textContent = 'ปี ' + (Number(year) + 543) + ' (' + year + ')';
+        let text = 'ปี ' + (Number(year) + 543) + ' (' + year + ')';
+
+        if (sapParams && sapParams.str_date && sapParams.end_date) {
+            text += ' | ' + formatSapDateDisplay(sapParams.str_date) + ' - ' + formatSapDateDisplay(sapParams.end_date);
+        }
+
+        label.textContent = text;
+    }
+
+    function getSelectedFiscalYear() {
+        const select = document.getElementById('annual-budget-year-select');
+        if (!select) {
+            return null;
+        }
+
+        const year = parseInt(select.value, 10);
+        return Number.isFinite(year) ? year : null;
     }
 
     function showError(message) {
@@ -104,6 +133,9 @@
 
         isLoading = true;
 
+        const selectedYear = getSelectedFiscalYear();
+        const requestBody = selectedYear ? { year: selectedYear } : {};
+
         try {
             const response = await fetch('../controllers/dashboard/dashboard_controller.php?action=annual_budget', {
                 method: 'POST',
@@ -112,7 +144,7 @@
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({}),
+                body: JSON.stringify(requestBody),
             });
 
             const contentType = response.headers.get('content-type') || '';
@@ -129,7 +161,7 @@
                 return;
             }
 
-            updateYearLabel(result.year);
+            updateYearLabel(result.year, result.sap_params);
 
             const items = Array.isArray(result.data) ? result.data : [];
             if (items.length === 0) {
@@ -152,6 +184,12 @@
             return;
         }
         window.__annualBudgetBooted = true;
+
+        const yearSelect = document.getElementById('annual-budget-year-select');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', loadAnnualBudgetReport);
+        }
+
         loadAnnualBudgetReport();
     }
 
