@@ -30,8 +30,8 @@ class DashboardAnnualBudgetService
         $sapParams = [
             'gjahr' => (string) $year,
             'rfikrs' => (string) ($this->config['rfikrs'] ?? '1000'),
-            'str_date' => $year . '0501',
-            'end_date' => $year . '0931',
+            'str_date' => '20251001',
+            'end_date' => '20260930',
         ];
 
         try {
